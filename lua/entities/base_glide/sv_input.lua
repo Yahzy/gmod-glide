@@ -88,10 +88,7 @@ function ENT:SetInputBool( seatIndex, action, pressed )
 
     if not pressed or seatIndex > 1 then return end
 
-    if action == "switch_weapon" then
-        self:SelectWeaponIndex( self:GetWeaponIndex() + 1 )
-
-    elseif action == "headlights" then
+    if action == "headlights" then
         self:ChangeHeadlightState( self:GetHeadlightState() + 1 )
 
     elseif action == "signal_left" then
@@ -141,12 +138,6 @@ function ENT:SetInputFloat( seatIndex, action, value )
 
     if floats then
         floats[action] = value
-    end
-end
-
-function ENT:OnInputMouseWheel( seatIndex, value )
-    if seatIndex < 2 then
-        self:SelectWeaponIndex( self:GetWeaponIndex() + ( value > 0 and -1 or 1 ) )
     end
 end
 

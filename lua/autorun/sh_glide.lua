@@ -24,12 +24,6 @@ Glide.EXPLOSION_TYPE = {
     TURRET = 2
 }
 
--- Used to notify clients about incoming lock-on/missiles
-Glide.DANGER_TYPE = {
-    LOCK_ON = 1,
-    MISSILE = 2
-}
-
 -- Enable lock-on for these entity classes
 Glide.LOCKON_WHITELIST = {
     ["base_glide"] = true,
@@ -180,37 +174,13 @@ if SERVER then
 end
 
 -- Toggles
-CreateConVar( "glide_pacifist_mode", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "When set to 1, disables VSWEPs and vehicle turrets.", 0, 1 )
 CreateConVar( "glide_allow_gravity_gun_punt", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "When set to 1, allows players to push vehicles with the Gravity Gun.", 0, 1 )
 
 -- Sandbox limits
 cleanup.Register( "glide_vehicles" )
-cleanup.Register( "glide_standalone_turrets" )
-cleanup.Register( "glide_missile_launchers" )
-cleanup.Register( "glide_projectile_launchers" )
 
 CreateConVar( "sbox_maxglide_vehicles", "5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Max. number of Glide vehicles that one player can have", 0 )
-CreateConVar( "sbox_maxglide_standalone_turrets", "5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Max. number of Glide Turrets that one player can have", 0 )
-CreateConVar( "sbox_maxglide_missile_launchers", "5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Max. number of Glide Missile Launchers that one player can have", 0 )
-CreateConVar( "sbox_maxglide_projectile_launchers", "5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Max. number of Glide Projectile Launchers that one player can have", 0 )
 CreateConVar( "sbox_maxglide_engine_stream_chips", "3", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Max. number of Glide Engine Stream Chips that one player can have", 0 )
-
--- Turret tool convars
-CreateConVar( "glide_turret_explosive_allow", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Allows Glide Turrets to use explosive bullets.", 0, 1 )
-CreateConVar( "glide_turret_max_damage", "50", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Maximum damage dealt per bullet for Glide Turrets.", 0 )
-CreateConVar( "glide_turret_min_delay", "0.02", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Minimum delay allowed for Glide Turrets.", 0, 1 )
-
--- Missile launcher tool convars
-CreateConVar( "glide_missile_launcher_min_delay", "0.5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Minimum delay allowed for Glide Missile Launchers.", 0.1, 5 )
-CreateConVar( "glide_missile_launcher_max_lifetime", "10", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Maximum missile flight time allowed for Glide Missile Launchers.", 1 )
-CreateConVar( "glide_missile_launcher_max_radius", "500", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Maximum radius from explosions created by Glide Missile Launchers.", 10 )
-CreateConVar( "glide_missile_launcher_max_damage", "200", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Maximum damage dealt by explosions from Glide Missile Launchers.", 1 )
-
--- Projectile launcher tool convars
-CreateConVar( "glide_projectile_launcher_min_delay", "0.5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Minimum delay allowed for Glide Projectile Launchers.", 0.1, 5 )
-CreateConVar( "glide_projectile_launcher_max_lifetime", "10", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Maximum projectile flight time allowed for Glide Projectile Launchers.", 1 )
-CreateConVar( "glide_projectile_launcher_max_radius", "500", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Maximum radius from explosions created by Glide Projectile Launchers.", 10 )
-CreateConVar( "glide_projectile_launcher_max_damage", "200", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Maximum damage dealt by explosions from Glide Projectile Launchers.", 1 )
 
 -- Gib convars
 CreateConVar( "glide_gib_lifetime", "8", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Lifetime of Glide Gibs, 0 for no despawning.", 0 )
@@ -343,11 +313,6 @@ if CLIENT then
     require( "styled_theme_tabbed_frame" )
     require( "styled_theme_file_browser" )
 
-    StyledTheme.RegisterFont( "GlideSelectedWeapon", 0.018, {
-        font = "Roboto",
-        weight = 500,
-    } )
-
     StyledTheme.RegisterFont( "GlideNotification", 0.022, {
         font = "Roboto",
         weight = 500,
@@ -366,5 +331,3 @@ end
 -- Automatically include files under
 -- `lua/glide/autoload/`, on both server and client.
 Glide.IncludeDir( "glide/autoload/", true, true )
-
-Glide.InitializeVSWEPS()

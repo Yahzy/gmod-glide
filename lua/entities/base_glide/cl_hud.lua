@@ -88,46 +88,9 @@ function ENT:OnActivateWeapon( weapon, slotIndex )
     end
 end
 
-function ENT:OnSyncWeaponData()
-    -- Read metadata
-    local slotIndex = net.ReadUInt( 5 )
-    local className = net.ReadString()
-
-    -- If it does not exist, create a client-side instance of
-    -- this weapon class on the new active slot index.
-    local weapon = self.weapons[slotIndex]
-
-    if not weapon then
-        weapon = Glide.CreateVehicleWeapon( className )
-        weapon.Vehicle = self
-        weapon:Initialize()
-
-        self.weapons[slotIndex] = weapon
-        self:OnActivateWeapon( weapon, slotIndex )
-    end
-
-    -- Let the weapon class read custom data
-    weapon.SlotIndex = slotIndex
-    weapon:OnReadData()
-
-    -- Check if the weapon index has changed
-    if self.weaponSlotIndex ~= slotIndex then
-        self.weaponSlotIndex = slotIndex
-
-        self.weaponSwitchNotification = {
-            time = RealTime() + 1.5,
-            name = weapon.Name or "MISSING",
-            icon = weapon.Icon or "glide/aim_dot.png"
-        }
-
-        EmitSound( "glide/ui/hud_switch.wav", Vector(), -2, nil, 1.0, nil, nil, 100 )
-    end
-end
-
 local Config = Glide.Config
 local DrawWeaponSelection = Glide.DrawWeaponSelection
 local DrawWeaponCrosshair = Glide.DrawWeaponCrosshair
-local CanUseWeaponry = Glide.CanUseWeaponry
 local LocalPlayer = LocalPlayer
 
 function ENT:DrawVehicleHUD( screenW, screenH )
@@ -145,21 +108,6 @@ function ENT:DrawVehicleHUD( screenW, screenH )
 
         if RealTime() > notif.time then
             self.weaponSwitchNotification = nil
-        end
-    end
-
-    local localPly = LocalPlayer()
-
-    if not CanUseWeaponry( localPly ) then
-        return playerListWidth
-    end
-
-    -- Let the weapon class draw it's own HUD
-    if self:GetDriver() == localPly then
-        local weapon = self.weapons[self.weaponSlotIndex]
-
-        if weapon then
-            weapon:DrawHUD( screenW, screenH )
         end
     end
 

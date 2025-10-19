@@ -8,25 +8,6 @@ commands[Glide.CMD_CREATE_EXPLOSION] = function()
     Glide.CreateExplosion( pos, normal, explosionType )
 end
 
-commands[Glide.CMD_INCOMING_DANGER] = function()
-    local dangerType = net.ReadUInt( 3 )
-
-    if dangerType == Glide.DANGER_TYPE.LOCK_ON then
-        Glide.LockOnHandler:OnIncomingLockOn()
-
-    elseif dangerType == Glide.DANGER_TYPE.MISSILE then
-        Glide.LockOnHandler:OnIncomingMissile( net.ReadUInt( 32 ) )
-
-        if IsValid( Glide.currentVehicle ) and Glide.IsAircraft( Glide.currentVehicle ) then
-            Glide.ShowKeyTip(
-                "#glide.notify.tip.countermeasures",
-                Glide.Config.binds["aircraft_controls"]["countermeasures"],
-                "materials/glide/icons/rocket.png"
-            )
-        end
-    end
-end
-
 commands[Glide.CMD_VIEW_PUNCH] = function()
     Glide.Camera:ViewPunch( net.ReadFloat() )
 end
@@ -69,24 +50,10 @@ commands[Glide.CMD_SET_CURRENT_VEHICLE] = function()
     ply:SetNWInt( "GlideSeatIndex", seatIndex )
 end
 
-commands[Glide.CMD_RELOAD_VSWEP] = function()
-    Glide.ReloadWeaponScript( net.ReadString() )
-end
-
 net.Receive( "glide.command", function()
     local cmd = net.ReadUInt( Glide.CMD_SIZE )
 
     if commands[cmd] then
         commands[cmd]()
-    end
-end )
-
--- This net event can run frequently, so it was
--- separated from the `glide.command` event.
-net.Receive( "glide.sync_weapon_data", function()
-    local vehicle = Glide.currentVehicle
-
-    if IsValid( vehicle ) then
-        vehicle:OnSyncWeaponData()
     end
 end )

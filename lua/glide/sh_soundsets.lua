@@ -68,25 +68,6 @@ end
     Add a few sound sets used throughout the addon.
 ]]
 
------ Weapon sounds
-
-Glide.AddSoundSet( "Glide.MissileLaunch", 90, 95, 105, {
-    ")glide/weapons/missile_launch_1.wav",
-    ")glide/weapons/missile_launch_2.wav",
-    ")glide/weapons/missile_launch_3.wav"
-} )
-
-Glide.AddSoundSet( "Glide.FlareLaunch", 90, 95, 105, {
-    ")glide/weapons/flare_deploy1.wav",
-    ")glide/weapons/flare_deploy2.wav"
-} )
-
-Glide.AddSoundSet( "Glide.InsurgentShoot", 90, 95, 105, {
-    ")glide/weapons/insurgent_shoot_1.wav",
-    ")glide/weapons/insurgent_shoot_2.wav",
-    ")glide/weapons/insurgent_shoot_3.wav"
-} )
-
 ----- Explosion sounds
 
 Glide.AddSoundSet( "Glide.Explosion.PreImpact", 95, 90, 110, {

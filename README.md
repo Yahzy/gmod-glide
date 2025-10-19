@@ -19,8 +19,6 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 - Editable engine/transmission/traction properties for cars and motorcycles
 - Car headlights, reverse lights, break lights, horns and sirens for emergency vehicles
 - Separate chassis and engine health
-- Some vehicles can switch between weapons
-- Some aircraft can deploy flare countermeasures
 - Vehicle turrets are lag compensated (currently in a limited fashion)
 - All vehicles (except tanks) can be controlled with Wiremod
 - Show indicators while driving/flying near the skybox (invisible map walls)
@@ -42,10 +40,7 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 ### Tools
 
 - Engine Stream
-- Missile Launcher
-- Projectile Launcher
 - Ragdoll Disabler
-- Turret
 - Vehicle Material
 - Wheel Model
 - Water Driving
@@ -59,13 +54,6 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 - Custom notifications system
 
 ## Server console variables
-
-### Weapons
-
-| Command | Description
-| ------- | -----------
-| `glide_homing_launcher_lock_required` `<number>` | Should the homing launcher require a lock to fire?
-| `glide_pacifist_mode` `<number>` | When set to `1`, disables all VSWEPs and vehicle turrets
 
 ### Vehicle damage multipliers
 
@@ -82,34 +70,6 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 | Command | Description
 | ------- | -----------
 | `sbox_maxglide_vehicles` `<number>` | Max. number of Glide vehicles that one player can have
-| `sbox_maxglide_standalone_turrets` `<number>` | Max. number of Glide Turrets that one player can have
-| `sbox_maxglide_missile_launchers` `<number>` | Max. number of Glide Missile Launchers that one player can have
-| `sbox_maxglide_projectile_launchers` `<number>` | Max. number of Glide Projectile Launchers that one player can have
-
-### Turret tool limits
-
-| Command | Description
-| ------- | -----------
-| `glide_turret_max_damage` `<number>` | Maximum damage dealt per bullet for Glide Turrets
-| `glide_turret_min_delay` `<number>` | Minimum delay allowed for Glide Turrets
-
-### Missile Launcher tool limits
-
-| Command | Description
-| ------- | -----------
-| `glide_missile_launcher_min_delay` `<number>` | Minimum delay allowed for Glide Missile Launchers
-| `glide_missile_launcher_max_lifetime` `<number>` | Maximum missile flight time allowed for Glide Missile Launchers
-| `glide_missile_launcher_max_radius` `<number>` | Maximum radius from explosions created by Glide Missile Launchers
-| `glide_missile_launcher_max_damage` `<number>` | Maximum damage dealt by explosions from Glide Missile Launchers
-
-### Projectile Launcher tool limits
-
-| Command | Description
-| ------- | -----------
-| `glide_projectile_launcher_min_delay` `<number>` | Minimum delay allowed for Glide Projectile Launchers
-| `glide_projectile_launcher_max_lifetime` `<number>` | Maximum projectile flight time allowed for Glide Projectile Launchers
-| `glide_projectile_launcher_max_radius` `<number>` | Maximum radius from explosions created by Glide Projectile Launchers
-| `glide_projectile_launcher_max_damage` `<number>` | Maximum damage dealt by explosions from Glide Projectile Launchers
 
 ### Ragdolls
 

@@ -8,7 +8,6 @@ AddCSLuaFile( "sh_vehicle_compat.lua" )
 include( "shared.lua" )
 include( "sv_input.lua" )
 include( "sv_damage.lua" )
-include( "sv_weapons.lua" )
 include( "sv_wheels.lua" )
 include( "sv_lights.lua" )
 include( "sv_sockets.lua" )
@@ -164,9 +163,6 @@ function ENT:Initialize()
     self:AddEFlags( EFL_DONTBLOCKLOS )
     self:AddFlags( FL_OBJECT )
 
-    -- Setup weapon system
-    self:WeaponInit()
-
     -- Setup wheel system
     self:WheelInit()
 
@@ -235,10 +231,6 @@ end
 
 function ENT:UpdateTransmitState()
     return 2 -- TRANSMIT_PVS
-end
-
-function ENT:OnRemove()
-    self:ClearWeapons()
 end
 
 function ENT:Use( activator )
@@ -667,7 +659,6 @@ function ENT:Think()
 
         if driver ~= self:GetDriver() then
             self:SetDriver( driver )
-            self:ClearLockOnTarget()
 
             if IsValid( driver ) then
                 if TriggerOutput then
@@ -688,11 +679,6 @@ function ENT:Think()
 
             selfTbl.hasTheDriverBeenRagdolled = nil
         end
-    end
-
-    -- Update weapons
-    if selfTbl.weaponCount > 0 then
-        self:WeaponThink()
     end
 
     -- Update water logic

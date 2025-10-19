@@ -112,25 +112,6 @@ do
     end
 end
 
-do
-    local pacifistModeCvar = GetConVar( "glide_pacifist_mode" )
-    local HookRun = hook.Run
-
-    --- Called by various weapon systems to check
-    --- if a player can use a vehicle VSWEP/turret.
-    function Glide.CanUseWeaponry( ply )
-        if pacifistModeCvar:GetBool() then
-            return false
-        end
-
-        if HookRun( "Glide_CanUseWeaponry", ply ) == false then
-            return false
-        end
-
-        return true
-    end
-end
-
 if CLIENT then
     function Glide.GetLanguageText( id )
         return language.GetPhrase( "glide." .. id )

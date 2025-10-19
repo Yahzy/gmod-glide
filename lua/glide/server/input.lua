@@ -309,16 +309,6 @@ hook.Add( "PlayerButtonUp", "Glide.VehicleInput", function( ply, button )
     end
 end )
 
-hook.Add( "StartCommand", "Glide.MouseWheelInput", function( ply, cmd )
-    if cmd:GetMouseWheel() ~= 0 then
-        local active = activeData[ply]
-
-        if active and IsValid( active.vehicle ) then
-            active.vehicle:OnInputMouseWheel( active.seatIndex, cmd:GetMouseWheel() )
-        end
-    end
-end )
-
 local FrameTime = FrameTime
 
 hook.Add( "Think", "Glide.ProcessMouseInput", function()

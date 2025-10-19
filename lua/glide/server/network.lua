@@ -164,25 +164,6 @@ function Glide.SendButtonActionNotification( target, text, icon, inputGroup, inp
     net.Send( target )
 end
 
---- Let the target client(s) know about a incoming lock-on.
-function Glide.SendLockOnDanger( target )
-    if type( target ) == "table" and #target == 0 then return end
-
-    Glide.StartCommand( Glide.CMD_INCOMING_DANGER, false )
-    net.WriteUInt( Glide.DANGER_TYPE.LOCK_ON, 3 )
-    net.Send( target )
-end
-
---- Let the target client(s) know about a incoming missile.
-function Glide.SendMissileDanger( target, missile )
-    if type( target ) == "table" and #target == 0 then return end
-
-    Glide.StartCommand( Glide.CMD_INCOMING_DANGER, false )
-    net.WriteUInt( Glide.DANGER_TYPE.MISSILE, 3 )
-    net.WriteUInt( missile:EntIndex(), 32 )
-    net.Send( target )
-end
-
 --- Apply a camera shake to the target's Glide camera.
 function Glide.SendViewPunch( target, force )
     if type( target ) == "table" and #target == 0 then return end

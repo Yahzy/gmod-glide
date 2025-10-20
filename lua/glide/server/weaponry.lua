@@ -2,7 +2,7 @@ local BlastDamage = util.BlastDamage
 local GetNearbyPlayers = Glide.GetNearbyPlayers
 
 --- Utility function to deal damage and send a explosion event to nearby players.
-function Glide.CreateExplosion( inflictor, attacker, origin, radius, damage, normal, explosionType )
+function Glide.CreateExplosion( inflictor, attacker, origin, radius, damage, normal )
     if not IsValid( inflictor ) then return end
 
     if not IsValid( attacker ) then
@@ -26,7 +26,6 @@ function Glide.CreateExplosion( inflictor, attacker, origin, radius, damage, nor
     Glide.StartCommand( Glide.CMD_CREATE_EXPLOSION, true )
     net.WriteVector( origin )
     net.WriteVector( normal )
-    net.WriteUInt( explosionType, 2 )
     net.Send( targets )
 
     util.ScreenShake( origin, explosionType == 2 and 0.5 or 5, 0.5, 1.0, 1500, true )

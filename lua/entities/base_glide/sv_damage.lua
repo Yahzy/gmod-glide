@@ -155,6 +155,10 @@ local cvarCollision = GetConVar( "glide_physics_damage_multiplier" )
 local cvarWorldCollision = GetConVar( "glide_world_physics_damage_multiplier" )
 
 function ENT:PhysicsCollide( data )
+    if isfunction(self.UVPhysicsCollide) then
+        self:UVPhysicsCollide(data)
+    end
+
     if data.TheirSurfaceProps == 76 then -- default_silent
         return
     end

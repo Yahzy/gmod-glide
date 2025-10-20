@@ -99,21 +99,6 @@ function SWEP:PrimaryAttack()
     local engineHealth = ent:GetEngineHealth()
     local chassisHealth = ent:GetChassisHealth()
 
-    if chassisHealth >= ent.MaxChassisHealth and engineHealth >= 1 then
-        local rotors = ent.rotors
-        if not rotors then return end
-
-        for i = 1, #rotors do
-            if not IsValid( rotors[i] ) then
-                ent:Repair()
-                user:EmitSound( "buttons/lever4.wav", 75, 150, 0.3 )
-                break
-            end
-        end
-
-        return
-    end
-
     if chassisHealth < ent.MaxChassisHealth then
         chassisHealth = chassisHealth + ( 20 * repairMul )
         engineHealth = math.Clamp( engineHealth + ( 0.03 * repairMul ), 0, 1 )

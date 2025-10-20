@@ -21,7 +21,7 @@ function ENT:Explode( attacker, inflictor )
     inflictor = IsValid( inflictor ) and inflictor or self
 
     -- Damage blast & effects
-    Glide.CreateExplosion( inflictor, attacker, self:GetPos(), self.ExplosionRadius, 200, Vector( 0, 0, 1 ), Glide.EXPLOSION_TYPE.VEHICLE )
+    Glide.CreateExplosion( inflictor, attacker, self:GetPos(), self.ExplosionRadius, 200, Vector( 0, 0, 1 ) )
 
     -- Damage passengers
     for _, ply in ipairs( self:GetAllPlayers() ) do

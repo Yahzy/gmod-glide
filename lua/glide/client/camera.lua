@@ -34,7 +34,6 @@ function Camera:Initialize( user, vehicle, seatIndex )
     self.position = Vector()
     self.angles = self.vehicle:GetAngles()
 
-    self.mode = 0
     self.isActive = false
     self.isUsingDirectMouse = false
     self.allowRolling = false
@@ -164,8 +163,6 @@ local Cos = math.cos
 local Clamp = math.Clamp
 local ExpDecay = Glide.ExpDecay
 
-local CAMERA_TYPE = Glide.CAMERA_TYPE
-
 function Camera:DoEffects( t, dt, speed )
     -- Update view punch
     local vel, ang = self.punchVelocity, self.punchAngle
@@ -186,12 +183,10 @@ function Camera:DoEffects( t, dt, speed )
     self.fov = ExpDecay( self.fov, keyZoom and 20 or fov, keyZoom and 5 or 2, dt )
 
     -- Apply a small shake
-    if self.mode == CAMERA_TYPE.CAR then
-        local mult = Clamp( speed * 0.0005, 0, 1 ) * Config.shakeStrength
+    local mult = Clamp( speed * 0.0005, 0, 1 ) * Config.shakeStrength
 
-        self.shakeOffset[2] = Cos( t * 1.5 ) * 4 * mult
-        self.shakeOffset[3] = ( ( Cos( t * 2 ) * 1.8 ) + ( Cos( t * 30 ) * 0.4 ) ) * mult
-    end
+    self.shakeOffset[2] = Cos( t * 1.5 ) * 4 * mult
+    self.shakeOffset[3] = ( ( Cos( t * 2 ) * 1.8 ) + ( Cos( t * 30 ) * 0.4 ) ) * mult
 end
 
 local IsValid = IsValid
@@ -232,9 +227,7 @@ function Camera:Think()
 
     local velocity = vehicle:GetVelocity()
     local speed = Abs( velocity:Length() )
-    local mode = vehicle:GetCameraType( self.seatIndex )
 
-    self.mode = mode
     self:DoEffects( t, dt, speed )
 
     local freeLook = input.IsKeyDown( Config.binds.general_controls.free_look )

@@ -73,8 +73,6 @@ end
 ]]
 Glide.SetupInputGroup( "general_controls" )
 
-Glide.AddInputAction( "general_controls", "attack", MOUSE_LEFT )
-Glide.AddInputAction( "general_controls", "switch_weapon", KEY_R )
 Glide.AddInputAction( "general_controls", "toggle_engine", KEY_I )
 Glide.AddInputAction( "general_controls", "headlights", KEY_H )
 Glide.AddInputAction( "general_controls", "free_look", KEY_LALT )
@@ -104,21 +102,3 @@ Glide.AddInputAction( "land_controls", "signal_right", KEY_RIGHT )
 Glide.AddInputAction( "land_controls", "shift_up", KEY_F )
 Glide.AddInputAction( "land_controls", "shift_down", KEY_G )
 Glide.AddInputAction( "land_controls", "shift_neutral", KEY_N )
-
---[[
-    Inputs that only apply to aircraft vehicle types
-]]
-Glide.SetupInputGroup( "aircraft_controls" )
-
-Glide.AddInputAction( "aircraft_controls", "attack_alt", KEY_SPACE )
-Glide.AddInputAction( "aircraft_controls", "landing_gear", KEY_G )
-Glide.AddInputAction( "aircraft_controls", "countermeasures", KEY_F )
-
-Glide.AddInputAction( "aircraft_controls", "pitch_up", KEY_DOWN )
-Glide.AddInputAction( "aircraft_controls", "pitch_down", KEY_UP )
-Glide.AddInputAction( "aircraft_controls", "yaw_left", KEY_A )
-Glide.AddInputAction( "aircraft_controls", "yaw_right", KEY_D )
-Glide.AddInputAction( "aircraft_controls", "roll_left", KEY_LEFT )
-Glide.AddInputAction( "aircraft_controls", "roll_right", KEY_RIGHT )
-Glide.AddInputAction( "aircraft_controls", "throttle_up", KEY_W )
-Glide.AddInputAction( "aircraft_controls", "throttle_down", KEY_S )

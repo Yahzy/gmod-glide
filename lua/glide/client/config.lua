@@ -6,7 +6,6 @@ function Config:Reset()
 
     -- Audio settings
     self.carVolume = 1.0
-    self.aircraftVolume = 1.0
     self.explosionVolume = 1.0
     self.hornVolume = 1.0
     self.windVolume = 0.7
@@ -58,8 +57,6 @@ function Config:Reset()
     self.showPassengerList = true
     self.showCustomHealth = true
     self.showEmptyVehicleHealth = false
-    self.showSkyboxOnLand = false
-    self.showSkyboxOnAircraft = true
     self.useKMH = false
 
     -- Misc. settings
@@ -112,7 +109,6 @@ function Config:Save( immediate )
 
         -- Audio settings
         carVolume = self.carVolume,
-        aircraftVolume = self.aircraftVolume,
         explosionVolume = self.explosionVolume,
         hornVolume = self.hornVolume,
         windVolume = self.windVolume,
@@ -164,8 +160,6 @@ function Config:Save( immediate )
         showPassengerList = self.showPassengerList,
         showCustomHealth = self.showCustomHealth,
         showEmptyVehicleHealth = self.showEmptyVehicleHealth,
-        showSkyboxOnLand = self.showSkyboxOnLand,
-        showSkyboxOnAircraft = self.showSkyboxOnAircraft,
         useKMH = self.useKMH,
 
         manualGearShifting = self.manualGearShifting,
@@ -227,7 +221,6 @@ function Config:Load()
 
     -- Audio settings
     SetNumber( self, "carVolume", data.carVolume, 0, 1, self.carVolume )
-    SetNumber( self, "aircraftVolume", data.aircraftVolume, 0, 1, self.aircraftVolume )
     SetNumber( self, "explosionVolume", data.explosionVolume, 0, 1, self.explosionVolume )
     SetNumber( self, "hornVolume", data.hornVolume, 0, 1, self.hornVolume )
     SetNumber( self, "windVolume", data.windVolume, 0, 1, self.windVolume )
@@ -279,8 +272,6 @@ function Config:Load()
     LoadBool( "showPassengerList", true )
     LoadBool( "showCustomHealth", true )
     LoadBool( "showEmptyVehicleHealth", false )
-    LoadBool( "showSkyboxOnLand", false )
-    LoadBool( "showSkyboxOnAircraft", true )
     LoadBool( "useKMH", false )
 
     SetNumber( self, "throttleModifierMode", data.throttleModifierMode, 0, 2, self.throttleModifierMode )
@@ -669,9 +660,6 @@ function Config:OpenFrame()
 
     SetupMouseSteerModeSettings()
 
-    -- Mouse aircraft settings
-    CreateHeader( panelMouse, L"mouse.flying_settings", 0 )
-
     local SetupFlyMouseModeSettings
 
     CreateCombo( panelMouse, L"mouse.flying_mode", {
@@ -764,7 +752,6 @@ function Config:OpenFrame()
     local groupOrder = {
         ["general_controls"] = 1,
         ["land_controls"] = 2,
-        ["aircraft_controls"] = 3
     }
 
     for groupdId, _ in pairs( Glide.InputGroups ) do
@@ -833,11 +820,6 @@ function Config:OpenFrame()
 
     CreateSlider( panelAudio, L"audio.car_volume", self.carVolume, 0, 1, 1, function( value )
         self.carVolume = value
-        self:Save()
-    end )
-
-    CreateSlider( panelAudio, L"audio.aircraft_volume", self.aircraftVolume, 0, 1, 1, function( value )
-        self.aircraftVolume = value
         self:Save()
     end )
 
@@ -936,18 +918,6 @@ function Config:OpenFrame()
         self:Save()
     end )
 
-    CreateToggle( panelMisc, L"misc.show_skybox.land", self.showSkyboxOnLand, function( value )
-        self.showSkyboxOnLand = value
-        self:Save()
-        Glide.EnableSkyboxIndicator()
-    end )
-
-    CreateToggle( panelMisc, L"misc.show_skybox.aircraft", self.showSkyboxOnAircraft, function( value )
-        self.showSkyboxOnAircraft = value
-        self:Save()
-        Glide.EnableSkyboxIndicator()
-    end )
-
     CreateToggle( panelMisc, L"misc.use_kmh", self.useKMH, function( value )
         self.useKMH = value
         self:Save()
@@ -1010,29 +980,9 @@ function Config:OpenFrame()
 
         local cvarList = {
             { name = "sbox_maxglide_vehicles", decimals = 0, min = 0, max = 100 },
-            { name = "sbox_maxglide_standalone_turrets", decimals = 0, min = 0, max = 100 },
-            { name = "sbox_maxglide_missile_launchers", decimals = 0, min = 0, max = 100 },
-            { name = "sbox_maxglide_projectile_launchers", decimals = 0, min = 0, max = 100 },
             { name = "glide_gib_lifetime", decimals = 0, min = 0, max = 60 },
             { name = "glide_gib_enable_collisions", decimals = 0, min = 0, max = 1 },
-            { name = "glide_pacifist_mode", decimals = 0, min = 0, max = 1 },
             { name = "glide_allow_gravity_gun_punt", decimals = 0, min = 0, max = 1 },
-
-            { category = "#tool.glide_turret.name" },
-            { name = "glide_turret_max_damage", decimals = 0, min = 0, max = 1000 },
-            { name = "glide_turret_min_delay", decimals = 2, min = 0, max = 1 },
-
-            { category = "#tool.glide_missile_launcher.name" },
-            { name = "glide_missile_launcher_min_delay", decimals = 2, min = 0.1, max = 5 },
-            { name = "glide_missile_launcher_max_lifetime", decimals = 1, min = 1, max = 30 },
-            { name = "glide_missile_launcher_max_radius", decimals = 0, min = 10, max = 1000 },
-            { name = "glide_missile_launcher_max_damage", decimals = 0, min = 0, max = 1000 },
-
-            { category = "#tool.glide_projectile_launcher.name" },
-            { name = "glide_projectile_launcher_min_delay", decimals = 2, min = 0.1, max = 5 },
-            { name = "glide_projectile_launcher_max_lifetime", decimals = 1, min = 1, max = 30 },
-            { name = "glide_projectile_launcher_max_radius", decimals = 0, min = 10, max = 1000 },
-            { name = "glide_projectile_launcher_max_damage", decimals = 0, min = 0, max = 1000 },
         }
 
         for _, data in ipairs( cvarList ) do
@@ -1124,7 +1074,7 @@ end )
 -- depending on settings and how loud the voice chat is.
 --
 -- audioType must be one of these:
--- "carVolume", "aircraftVolume", "explosionVolume", "hornVolume", "windVolume", "warningVolume"
+-- "carVolume", "explosionVolume", "hornVolume", "windVolume", "warningVolume"
 function Config.GetVolume( audioType )
     return Config[audioType] * glideVolume
 end

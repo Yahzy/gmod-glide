@@ -17,13 +17,6 @@ Glide.MAX_SEATS = 10
 -- Explosions are only transmitted to nearby players
 Glide.MAX_EXPLOSION_DISTANCE = 15000
 
--- Explosion types
-Glide.EXPLOSION_TYPE = {
-    MISSILE = 0,
-    VEHICLE = 1,
-    TURRET = 2
-}
-
 -- Enable lock-on for these entity classes
 Glide.LOCKON_WHITELIST = {
     ["base_glide"] = true,
@@ -77,13 +70,6 @@ end
 
 if CLIENT then
     Glide.THEME_COLOR = Color( 56, 113, 179 )
-
-    -- Vehicle camera types
-    Glide.CAMERA_TYPE = {
-        CAR = 0,
-        TURRET = 1,
-        AIRCRAFT = 2
-    }
 
     -- Surfaces that can generate tire roll marks
     Glide.ROLL_MARK_SURFACES = {

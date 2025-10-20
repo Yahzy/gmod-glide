@@ -45,11 +45,6 @@ if CLIENT then
     ENT.StoppedSound = "glide/engines/shut_down_1.wav"
     ENT.HornSound = "glide/horns/car_horn_med_8.wav"
 
-    --- Override this base class function.
-    function ENT:GetCameraType( _seatIndex )
-        return 0 -- Glide.CAMERA_TYPE.CAR
-    end
-
     function ENT:AllowFirstPersonMuffledSound( _seatIndex )
         return false
     end

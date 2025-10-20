@@ -78,7 +78,7 @@ end
 -- you should add this function:
 --[[
     function ENT:GetInputGroups( seatIndex )
-        return { "general_controls", "aircraft_controls", "example_controls" }
+        return { "general_controls", "example_controls" }
     end
 ]]
 

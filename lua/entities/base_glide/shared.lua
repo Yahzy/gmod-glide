@@ -241,10 +241,6 @@ if CLIENT then
     function ENT:AllowFirstPersonMuffledSound( _seatIndex ) return true end
     function ENT:AllowWindSound( _seatIndex ) return false, 0 end
 
-    function ENT:GetCameraType( _seatIndex )
-        return 0 -- Glide.CAMERA_TYPE.CAR
-    end
-
     --- Given a `soundType` and surface material ID,
     --- you can override the wheel roll/skid sound.
     ---

@@ -149,22 +149,6 @@ end )
 hook.Add( "EntityTakeDamage", "Glide.OverrideDamage", function( target, dmginfo )
     local inflictor = dmginfo:GetInflictor()
 
-    if IsValid( inflictor ) and inflictor:GetClass() == "glide_missile" then
-        -- Don't let missiles deal crush damage
-        if dmginfo:IsDamageType( 1 ) then
-            return true
-        end
-
-        if target.VehicleType == 5 then -- Glide.VEHICLE_TYPE.TANK
-            -- Let missiles deal more damage to tanks
-            dmginfo:SetDamage( dmginfo:GetDamage() * 5 )
-
-        elseif target.IsArmored then
-            -- Let missiles deal more damage to armored Simfphys vehicles
-            dmginfo:SetDamage( dmginfo:GetDamage() * 50 )
-        end
-    end
-
     if IsValid( inflictor ) and inflictor.IsGlideVehicle and dmginfo:IsDamageType( 1 ) then -- DMG_CRUSH
         -- Set the vehicle's driver/creator as the attacker 
         local driver = inflictor:GetDriver()
@@ -202,7 +186,7 @@ end, HOOK_HIGH )
 hook.Add( "OnDamagedByExplosion", "Glide.DisableRingingSound", function( _, dmginfo )
     local inflictor = dmginfo:GetInflictor()
 
-    if IsValid( inflictor ) and ( inflictor.IsGlideVehicle or inflictor:GetClass() == "glide_missile" ) then
+    if IsValid( inflictor ) and inflictor.IsGlideVehicle then
         return true
     end
 end )
@@ -266,13 +250,8 @@ local function ResetAll()
     local classes = {
         ["base_glide"] = true,
         ["base_glide_car"] = true,
-        ["base_glide_tank"] = true,
-        ["base_glide_aircraft"] = true,
-        ["base_glide_heli"] = true,
-        ["base_glide_plane"] = true,
         ["base_glide_motorcycle"] = true,
-        ["base_glide_trailer"] = true,
-        ["base_glide_plane_vtol"] = true
+        ["base_glide_boat"] = true,
     }
 
     for _, e in ents.Iterator() do

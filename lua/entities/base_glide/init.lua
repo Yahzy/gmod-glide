@@ -216,7 +216,7 @@ function ENT:Initialize()
     -- Set health back to defaults
     self:Repair()
 
-    -- Let child classes create things like seats, turrets, etc.
+    -- Let child classes create things like seats, etc.
     self:CreateFeatures()
 
     -- Allow players to shoot fast-moving vehicles when their ping is high

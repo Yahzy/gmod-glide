@@ -201,7 +201,6 @@ local FrameTime = FrameTime
 local TraceLine = util.TraceLine
 local ExpDecayAngle = Glide.ExpDecayAngle
 
-local MOUSE_FLY_MODE = Glide.MOUSE_FLY_MODE
 local MOUSE_STEER_MODE = Glide.MOUSE_STEER_MODE
 
 function Camera:Think()
@@ -241,12 +240,7 @@ function Camera:Think()
     local freeLook = input.IsKeyDown( Config.binds.general_controls.free_look )
 
     if self:IsFixed() then
-        if mode == CAMERA_TYPE.AIRCRAFT then
-            self.isUsingDirectMouse = Config.mouseFlyMode == MOUSE_FLY_MODE.DIRECT and self.seatIndex == 1 and not freeLook
-
-        elseif mode ~= CAMERA_TYPE.TURRET then
-            self.isUsingDirectMouse = Config.mouseSteerMode == MOUSE_STEER_MODE.DIRECT and self.seatIndex == 1 and not freeLook
-        end
+        self.isUsingDirectMouse = Config.mouseSteerMode == MOUSE_STEER_MODE.DIRECT and self.seatIndex == 1 and not freeLook
 
         return
     end
@@ -255,49 +249,33 @@ function Camera:Think()
     local vehicleAngles = vehicle:GetAngles()
     local decay, rollDecay = 3, 3
 
-    if mode == CAMERA_TYPE.TURRET then
-        self.centerStrength = 0
-        self.allowRolling = false
-        decay = 0
+    self.isUsingDirectMouse = Config.mouseSteerMode == MOUSE_STEER_MODE.DIRECT and self.seatIndex == 1 and not freeLook
 
-    elseif mode == CAMERA_TYPE.AIRCRAFT then
-        self.isUsingDirectMouse = Config.mouseFlyMode == MOUSE_FLY_MODE.DIRECT and self.seatIndex == 1 and not freeLook
-        self.allowRolling = Config.mouseFlyMode ~= MOUSE_FLY_MODE.AIM
+    if self.isUsingDirectMouse then
+        self.allowRolling = self.isInFirstPerson
+
+        -- Make the camera angles always point towards
+        -- the vehicle's forward direction.
+        decay = 6 * self.centerStrength
+        rollDecay = 8
+
+    elseif self.isInFirstPerson then
+        self.allowRolling = true
 
         -- Only make the camera angles point towards the vehicle's
         -- forward direction while moving.
-        decay = ( self.isUsingDirectMouse or self.isInFirstPerson ) and 6 or Clamp( ( speed - 5 ) * 0.01, 0, 1 ) * 3
-        decay = decay * self.centerStrength
-
+        decay = Clamp( ( speed - 5 ) * 0.002, 0, 1 ) * 8 * self.centerStrength
+        rollDecay = 8
     else
-        self.isUsingDirectMouse = Config.mouseSteerMode == MOUSE_STEER_MODE.DIRECT and self.seatIndex == 1 and not freeLook
+        self.allowRolling = false
 
-        if self.isUsingDirectMouse then
-            self.allowRolling = self.isInFirstPerson
+        vehicleAngles = velocity:Angle()
+        vehicleAngles[1] = vehicleAngles[1] + 5 * self.trailerDistanceFraction
+        vehicleAngles[3] = 0
 
-            -- Make the camera angles always point towards
-            -- the vehicle's forward direction.
-            decay = 6 * self.centerStrength
-            rollDecay = 8
-
-        elseif self.isInFirstPerson then
-            self.allowRolling = true
-
-            -- Only make the camera angles point towards the vehicle's
-            -- forward direction while moving.
-            decay = Clamp( ( speed - 5 ) * 0.002, 0, 1 ) * 8 * self.centerStrength
-            rollDecay = 8
-        else
-            self.allowRolling = false
-
-            vehicleAngles = velocity:Angle()
-            vehicleAngles[1] = vehicleAngles[1] + 5 * self.trailerDistanceFraction
-            vehicleAngles[3] = 0
-
-            -- Only make the camera angles point towards the vehicle's
-            -- forward direction while moving.
-            decay = Clamp( ( speed - 10 ) * 0.002, 0, 1 ) * 4 * self.centerStrength
-        end
+        -- Only make the camera angles point towards the vehicle's
+        -- forward direction while moving.
+        decay = Clamp( ( speed - 10 ) * 0.002, 0, 1 ) * 4 * self.centerStrength
     end
 
     if self.allowRolling then
@@ -316,20 +294,6 @@ function Camera:Think()
     -- or using "Control movement directly" on aircraft.
     if self.seatIndex < 2 then
         allowAutoCenter = allowAutoCenter or self.isUsingDirectMouse
-    end
-
-    -- Don't recenter if using "Steer towards aim direction" on land vehicles,
-    -- or if using "Point-to-aim" on aircraft.
-    if
-        ( mode == CAMERA_TYPE.AIRCRAFT and Config.mouseFlyMode == MOUSE_FLY_MODE.AIM ) or
-        ( mode ~= CAMERA_TYPE.AIRCRAFT and Config.mouseSteerMode == MOUSE_STEER_MODE.AIM )
-    then
-        allowAutoCenter = false
-    end
-
-    -- Don't recenter on turrets
-    if mode == CAMERA_TYPE.TURRET then
-        allowAutoCenter = false
     end
 
     self.centerStrength = allowAutoCenter and ExpDecay( self.centerStrength, 1, 2, dt ) or 0

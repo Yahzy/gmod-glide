@@ -2,7 +2,6 @@ local IsValid = IsValid
 
 hook.Add( "CanPlayerEnterVehicle", "Glide.CheckVehicleLock", function( ply, seat )
     if not IsValid( seat ) then return end
-    if ply.GlideRagdoll then return false end
 
     -- Make sure this seat was created by Glide
     local seatIndex = seat.GlideSeatIndex
@@ -248,14 +247,6 @@ local function ResetVehicle( vehicle )
     vehicle:ResetInputs( 1 )
     vehicle:SetDriver( NULL )
     vehicle:TurnOff()
-
-    -- Reset weapon timings
-    if vehicle.weaponCount > 0 then
-        for _, weapon in ipairs( vehicle.weapons ) do
-            weapon.nextFire = 0
-            weapon.nextReload = 0
-        end
-    end
 end
 
 local function ResetAll()

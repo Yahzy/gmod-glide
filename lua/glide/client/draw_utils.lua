@@ -29,27 +29,6 @@ function Glide.DrawIcon( x, y, icon, size, color, angle )
     DrawTexturedRectRotated( x, y, size, size, angle or 0 )
 end
 
-local MAT_BACKGROUND = Material( "glide/weapon_name.png", "smooth" )
-
-function Glide.DrawWeaponSelection( name, icon )
-    local sw, sh = ScrW(), ScrH()
-    local size = sh * 0.15
-    local y = sh * 0.2
-
-    SetMaterial( MAT_BACKGROUND )
-    SetColor( 255, 255, 255 )
-    DrawTexturedRectRotated( sw * 0.5, y, size, size, 0 )
-
-    draw.SimpleText( name, "GlideSelectedWeapon", sw * 0.5, y + size * 0.06, color_white, 1 )
-
-    if not cache[icon] then
-        cache[icon] = Material( icon, "smooth" )
-    end
-
-    SetMaterial( cache[icon] )
-    DrawTexturedRectRotated( sw * 0.5, y - size * 0.1, size * 0.3, size * 0.3, 0 )
-end
-
 local DrawRect = surface.DrawRect
 local GetCachedIcon = Glide.GetCachedIcon
 

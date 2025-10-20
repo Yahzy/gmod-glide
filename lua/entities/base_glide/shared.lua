@@ -303,12 +303,6 @@ if SERVER then
     -- Particle size multiplier for collisions
     ENT.CollisionParticleSize = 1
 
-    -- Should passengers fall on collisions?
-    ENT.FallOnCollision = false
-
-    -- Should passengers fall when under water?
-    ENT.FallWhileUnderWater = false
-
     -- Damage things nearby when the vehicle explodes
     ENT.ExplosionRadius = 500
 
@@ -404,13 +398,6 @@ if SERVER then
         outputs[#outputs + 1] = { "PassengerSeats", "ARRAY", "All other seats" }
     end
 
-    --- When this vehicle's `FallOnCollision` is `true`,
-    --- this function runs for all seats. You can use it
-    --- to make only some players ragdoll off the vehicle.
-    function ENT:CanFallOnCollision( _seatIndex )
-        return true
-    end
-
     --- Return which input groups should be activated
     --- for a specific seat on this vehicle.
     function ENT:GetInputGroups( _seatIndex )
@@ -427,9 +414,6 @@ if SERVER then
     function ENT:OnWeaponFire( _weapon, _weaponIndex )
         return true -- Allow the VSWEP script to run it's own weapon fire logic
     end
-
-    function ENT:OnWeaponStart( _weapon, _weaponIndex ) end
-    function ENT:OnWeaponStop( _weapon, _weaponIndex ) end
 
     function ENT:OnPostThink( _dt, _selfTbl ) end
     function ENT:OnSimulatePhysics( _phys, _dt, _outLin, _outAng ) end

@@ -165,10 +165,6 @@ function ENT:PhysicsCollide( data )
     local speed = velocityChange:Length()
     if speed < 30 then return end
 
-    if self.FallOnCollision then
-        self:PhysicsCollideFall( speed, data )
-    end
-
     local ent = data.HitEntity
     local isPlayer = IsValid( ent ) and ent:IsPlayer()
     local t = RealTime()
@@ -223,37 +219,4 @@ function ENT:PhysicsCollide( data )
         dmg:SetDamagePosition( data.HitPos )
         self:TakeDamageInfo( dmg )
     end
-end
-
-function ENT:PhysicsCollideFall( speed, data )
-    local ent = data.HitEntity
-
-    if IsValid( ent ) then
-        if ent:IsPlayer() or ent:IsNPC() then return end
-        if ent:GetClass() == "func_breakable" then return end
-    end
-
-    local upDot = self:GetUp():Dot( -data.HitSpeed:GetNormalized() )
-    local relativeHitPos = self:WorldToLocal( data.HitPos )
-
-    if upDot < -0.5 and relativeHitPos[3] < 0 then
-        -- The hit came from below the vehicle
-        speed = speed * 0.2
-
-    elseif upDot > 0.5 and relativeHitPos[3] > 0 then
-        -- The hit came from above the vehicle
-        speed = speed * 5
-    end
-
-    if speed < 600 then return end
-
-    local vel = data.OurOldVelocity * 0.5
-    vel[3] = vel[3] + 200
-
-    -- Timer to avoid the "likely crashes the game" warning in console
-    timer.Simple( 0, function()
-        if IsValid( self ) then
-            self:RagdollPlayers( nil, vel )
-        end
-    end )
 end

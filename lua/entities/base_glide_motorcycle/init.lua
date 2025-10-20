@@ -56,7 +56,7 @@ end
 
 --- Override this base class function.
 function ENT:OnDriverExit()
-    if self.hasTheDriverBeenRagdolled or math.abs( self.totalSpeed ) > 100 then
+    if math.abs( self.totalSpeed ) > 100 then
         self:SetStaySpright( false )
     else
         BaseClass.OnDriverExit( self )

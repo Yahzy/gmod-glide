@@ -35,15 +35,3 @@ list.Set( "GlideWheelModels", "models/props_vehicles/apc_tire001.mdl", { angle =
 list.Set( "GlideWheelModels", "models/xeon133/offroad/off-road-30.mdl", { angle = Angle( 0, 90, 0 ), scale = Vector( 0.4, 1, 1 ) } )
 list.Set( "GlideWheelModels", "models/xeon133/racewheel/race-wheel-30.mdl", { angle = Angle( 90, 0, 0 ), scale = Vector( 1, 0.4, 1 ) } )
 list.Set( "GlideWheelModels", "models/xqm/airplanewheel1medium.mdl", { angle = Angle( 0, 90, 0 ), scale = Vector( 0.35, 1, 1 ) } )
-
--- Add some missile/projectile models to the whitelist
-list.Set( "GlideProjectileModels", "models/glide/weapons/homing_rocket.mdl", { scale = 1.5 } )
-list.Set( "GlideProjectileModels", "models/weapons/w_missile_closed.mdl", { scale = 1.1 } )
-list.Set( "GlideProjectileModels", "models/props_phx2/garbage_metalcan001a.mdl", { scale = 2, angle = Angle( 90, 0, 0 ), offset = Vector( -2, 0, 0 ) } )
-list.Set( "GlideProjectileModels", "models/props_phx/amraam.mdl", { scale = 0.8, offset = Vector( 40, 0, -9 ) } )
-list.Set( "GlideProjectileModels", "models/props_phx/ww2bomb.mdl", { scale = 0.8, offset = Vector( 20, 0, -6 ) } )
-list.Set( "GlideProjectileModels", "models/props_phx/mk-82.mdl", { scale = 0.7, offset = Vector( 40, 0, -10 ) } )
-list.Set( "GlideProjectileModels", "models/props_phx/torpedo.mdl", { scale = 0.4, offset = Vector( 40, 0, -10 ) } )
-list.Set( "GlideProjectileModels", "models/props_phx/cannonball.mdl", { scale = 0.8, offset = Vector( 0, 0, -21 ) } )
-list.Set( "GlideProjectileModels", "models/props_phx/misc/flakshell_big.mdl", { scale = 0.5, offset = Vector( -15, 0, 0 ), angle = Angle( 90, 0, 0 ) } )
-list.Set( "GlideProjectileModels", "models/props_phx/misc/potato_launcher_explosive.mdl", { offset = Vector( -10, 0, 0 ), angle = Angle( 90, 0, 0 ) } )

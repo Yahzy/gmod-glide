@@ -144,8 +144,6 @@ end
 if SERVER then
     ENT.ChassisMass = 400
 
-    ENT.FallOnCollision = true
-    ENT.FallWhileUnderWater = true
     ENT.SpawnPositionOffset = Vector( 0, 0, 40 )
 
     ENT.SuspensionHeavySound = "Glide.Suspension.CompressBike"

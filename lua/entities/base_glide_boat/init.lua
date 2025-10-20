@@ -37,12 +37,7 @@ end
 --- Implement this base class function.
 function ENT:OnDriverExit()
     self:SetIsHonking( false )
-
-    if self.hasTheDriverBeenRagdolled then
-        BaseClass.OnDriverExit( self )
-    else
-        self:TurnOff()
-    end
+    self:TurnOff()
 end
 
 --- Implement this base class function.
@@ -131,11 +126,6 @@ function ENT:OnPostThink( dt, selfTbl )
 
         elseif self:GetEngineState() == 2 then
             self:TurnOff()
-        end
-
-        -- Kick passengers
-        if #self:GetAllPlayers() > 0 then
-            self:RagdollPlayers()
         end
     end
 

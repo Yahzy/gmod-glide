@@ -301,40 +301,6 @@ do
     end
 end
 
-do
-    local ragdollEnableCvar = GetConVar( "glide_ragdoll_enable" )
-    local maxRagdollTimeCvar = GetConVar( "glide_ragdoll_max_time" )
-
-    --- Kicks out the passenger from a specific seat entity, then ragdoll them.
-    function ENT:RagdollPlayerOnSeat( seat, time, vel )
-        if not IsValid( seat ) then return end
-        if not seat.GlideSeatIndex then return end
-        if not ragdollEnableCvar:GetBool() then return end
-
-        time = time or maxRagdollTimeCvar:GetFloat()
-        vel = vel or self:GetVelocity()
-
-        local ply = seat:GetDriver()
-
-        if IsValid( ply ) and self:CanFallOnCollision( seat.GlideSeatIndex ) then
-            Glide.RagdollPlayer( ply, vel, time )
-
-            if seat.GlideSeatIndex == 1 then
-                self.hasTheDriverBeenRagdolled = true
-            end
-        end
-    end
-
-    --- Kicks out all passengers, then ragdoll them.
-    function ENT:RagdollPlayers( time, vel )
-        vel = vel or self:GetVelocity()
-
-        for _, seat in Glide.EntityPairs( self.seats ) do
-            self:RagdollPlayerOnSeat( seat, time, vel )
-        end
-    end
-end
-
 --- Makes so only the vehicle creator and prop
 --- protection buddies can enter this vehicle.
 function ENT:SetLocked( isLocked, doNotNotify )
@@ -676,8 +642,6 @@ function ENT:Think()
 
                 self:OnDriverExit()
             end
-
-            selfTbl.hasTheDriverBeenRagdolled = nil
         end
     end
 

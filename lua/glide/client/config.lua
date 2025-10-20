@@ -68,7 +68,6 @@ function Config:Reset()
     self.autoHeadlightOn = true
     self.autoHeadlightOff = true
     self.autoTurnOffLights = true
-    self.enableTips = true
 end
 
 --- Reset bind actions to their default buttons.
@@ -174,7 +173,6 @@ function Config:Save( immediate )
         autoHeadlightOn = self.autoHeadlightOn,
         autoHeadlightOff = self.autoHeadlightOff,
         autoTurnOffLights = self.autoTurnOffLights,
-        enableTips = self.enableTips,
 
         -- Group-to-action-to-button dictionary
         binds = self.binds
@@ -290,7 +288,6 @@ function Config:Load()
     LoadBool( "autoHeadlightOn", true )
     LoadBool( "autoHeadlightOff", true )
     LoadBool( "autoTurnOffLights", true )
-    LoadBool( "enableTips", true )
 
     -- Group-to-action-to-button dictionary
     local loadedBinds = type( data.binds ) == "table" and data.binds or {}
@@ -974,11 +971,6 @@ function Config:OpenFrame()
         self:TransmitInputSettings()
     end )
 
-    CreateToggle( panelMisc, L"misc.tips", self.enableTips, function( value )
-        self.enableTips = value
-        self:Save()
-    end )
-
     CreateHeader( panelMisc, L"settings.reset" )
 
     CreateButton( panelMisc, L"misc.reset_binds", function()
@@ -1025,9 +1017,6 @@ function Config:OpenFrame()
             { name = "glide_gib_enable_collisions", decimals = 0, min = 0, max = 1 },
             { name = "glide_pacifist_mode", decimals = 0, min = 0, max = 1 },
             { name = "glide_allow_gravity_gun_punt", decimals = 0, min = 0, max = 1 },
-
-            { name = "glide_ragdoll_enable", decimals = 0, min = 0, max = 1 },
-            { name = "glide_ragdoll_max_time", decimals = 0, min = 0, max = 30 },
 
             { category = "#tool.glide_turret.name" },
             { name = "glide_turret_max_damage", decimals = 0, min = 0, max = 1000 },

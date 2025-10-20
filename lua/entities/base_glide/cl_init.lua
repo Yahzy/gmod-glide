@@ -23,9 +23,6 @@ function ENT:Initialize()
     self.isLocalPlayerInFirstPerson = false
     self.isLocalPlayerInVehicle = false
 
-    self.weapons = {}
-    self.weaponSlotIndex = 0
-
     -- Create a RangedFeature to handle engine sounds
     self.rfSounds = Glide.CreateRangedFeature( self, self.MaxSoundDistance )
     self.rfSounds:SetTestCallback( "ShouldActivateSounds" )

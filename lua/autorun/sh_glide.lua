@@ -28,13 +28,8 @@ Glide.EXPLOSION_TYPE = {
 Glide.LOCKON_WHITELIST = {
     ["base_glide"] = true,
     ["base_glide_car"] = true,
-    ["base_glide_tank"] = true,
-    ["base_glide_aircraft"] = true,
-    ["base_glide_heli"] = true,
-    ["base_glide_plane"] = true,
     ["base_glide_boat"] = true,
     ["base_glide_motorcycle"] = true,
-    ["base_glide_plane_vtol"] = true,
     ["prop_vehicle_prisoner_pod"] = true
 }
 
@@ -186,10 +181,6 @@ CreateConVar( "sbox_maxglide_engine_stream_chips", "3", FCVAR_ARCHIVE + FCVAR_NO
 CreateConVar( "glide_gib_lifetime", "8", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Lifetime of Glide Gibs, 0 for no despawning.", 0 )
 CreateConVar( "glide_gib_enable_collisions", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "When set to 0, gibs wont collide with players/props.", 0, 1 )
 
--- Ragdoll convars
-CreateConVar( "glide_ragdoll_enable", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "When set to 0, players will not be ragdolled when unsuccessfully falling out of vehicles.", 0, 1 )
-CreateConVar( "glide_ragdoll_max_time", "10", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "The max. amount of time a player can stay ragdolled. Set to 0 for infinite.", 0 )
-
 list.Set( "ContentCategoryIcons", "Glide", "materials/glide/icons/car.png" )
 
 do
@@ -283,8 +274,6 @@ function Glide.IncludeDir( dirPath, doInclude, doTransfer )
 end
 
 if SERVER then
-    resource.AddWorkshop( "3389728250" )
-
     -- Shared files
     Glide.IncludeDir( "glide/", true, true )
 

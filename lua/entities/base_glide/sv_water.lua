@@ -65,19 +65,6 @@ function ENT:WaterThink( selfTbl )
 
     self:SetWaterState( waterState )
 
-    -- If necessary, kick passengers when underwater
-    if selfTbl.FallWhileUnderWater and waterState > 2 then
-        local ply
-
-        for _, seat in EntityPairs( self.seats ) do
-            ply = seat:GetDriver()
-
-            if IsValid( ply ) and ply:WaterLevel() > 2 then
-                self:RagdollPlayerOnSeat( seat, 3 )
-            end
-        end
-    end
-
     -- Draw buoyancy debug overlays, if `developer` cvar is active
     if GetDevMode() then
         for _, point in ipairs( selfTbl.buoyancyPoints ) do

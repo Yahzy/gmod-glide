@@ -22,9 +22,6 @@ function ENT:OnDriverChange( _, _, _ )
         self.lockOnSound:Stop()
         self.lockOnSound = nil
     end
-
-    self.weapons = {}
-    self.weaponSlotIndex = 0
 end
 
 local Config = Glide.Config

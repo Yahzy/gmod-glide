@@ -26,7 +26,7 @@ function MouseInput:Activate()
 
     -- If the local player is not on a aircraft, with direct mouse steering enabled...
     if
-        and Config.mouseSteerMode == Glide.MOUSE_STEER_MODE.DIRECT
+        Config.mouseSteerMode == Glide.MOUSE_STEER_MODE.DIRECT
         and vehicle:GetCameraType( 1 ) == Glide.CAMERA_TYPE.CAR
     then
         -- Activate mouse steering controls.

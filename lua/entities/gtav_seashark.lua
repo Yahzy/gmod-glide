@@ -57,8 +57,6 @@ end
 if SERVER then
     ENT.ChassisMass = 700
     ENT.SpawnPositionOffset = Vector( 0, 0, 50 )
-    ENT.FallOnCollision = true
-    ENT.FallWhileUnderWater = false
 
     ENT.BuoyancyPointsXSpacing = 0.9
     ENT.BuoyancyPointsYSpacing = 0.7

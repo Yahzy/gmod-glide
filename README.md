@@ -30,7 +30,7 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 - Custom key binds, manual gear shifting toggle
 - Change the volume for land vehicles, aircraft and explosions
 - Change the volume of all Glide vehicles when someone is talking on voice chat
-- Toggle tips, headlight shadows, automatic headlights, and many others
+- Toggle headlight shadows, automatic headlights, and many others
 
 ### SWEPS
 
@@ -40,7 +40,6 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 ### Tools
 
 - Engine Stream
-- Ragdoll Disabler
 - Vehicle Material
 - Wheel Model
 - Water Driving
@@ -70,13 +69,6 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 | Command | Description
 | ------- | -----------
 | `sbox_maxglide_vehicles` `<number>` | Max. number of Glide vehicles that one player can have
-
-### Ragdolls
-
-| Command | Description
-| ------- | -----------
-| `glide_ragdoll_enable` `<number>` | When set to 0, players will not be ragdolled when unsuccessfully falling out of vehicles
-| `glide_ragdoll_max_time` `<number>` | The max. amount of time a player can stay ragdolled. Set to 0 for infinite
 
 ## Contributing
 

@@ -1,7 +1,6 @@
 AddCSLuaFile( "shared.lua" )
 AddCSLuaFile( "cl_init.lua" )
 AddCSLuaFile( "cl_lights.lua" )
-AddCSLuaFile( "cl_hud.lua" )
 AddCSLuaFile( "cl_water.lua" )
 AddCSLuaFile( "sh_vehicle_compat.lua" )
 

@@ -65,19 +65,7 @@ local function BlockBinds( _, bind, _, code )
     end
 end
 
-local ScrW, ScrH = ScrW, ScrH
 local activeVehicle, activeSeatIndex = NULL, 0
-local cvarDrawHud = GetConVar( "cl_drawhud" )
-
-local function DrawVehicleHUD()
-    if
-        IsValid( activeVehicle ) and
-        cvarDrawHud:GetBool() and
-        hook.Run( "Glide_CanDrawHUD", activeVehicle ) ~= false
-    then
-        activeVehicle:DrawVehicleHUD( ScrW(), ScrH() )
-    end
-end
 
 local function OnEnter( vehicle, seatIndex )
     vehicle:OnLocalPlayerEnter( seatIndex )
@@ -92,7 +80,6 @@ local function OnEnter( vehicle, seatIndex )
 
     hook.Add( "PlayerBindPress", "Glide.BlockBinds", BlockBinds )
     hook.Add( "HUDShouldDraw", "Glide.HideDefaultHealth", HUDShouldDraw )
-    hook.Add( "HUDPaint", "Glide.DrawVehicleHUD", DrawVehicleHUD )
     hook.Run( "Glide_OnLocalEnterVehicle", vehicle, seatIndex )
 
     timer.Create( "Glide.CheckMouseVisibility", 0.25, 0, function()
@@ -129,7 +116,6 @@ local function OnLeave( ply )
 
     hook.Remove( "PlayerBindPress", "Glide.BlockBinds" )
     hook.Remove( "HUDShouldDraw", "Glide.HideDefaultHealth" )
-    hook.Remove( "HUDPaint", "Glide.DrawVehicleHUD" )
     hook.Run( "Glide_OnLocalExitVehicle" )
 
     if system.IsLinux() then

@@ -279,11 +279,6 @@ if CLIENT then
     require( "styled_theme_tabbed_frame" )
     require( "styled_theme_file_browser" )
 
-    StyledTheme.RegisterFont( "GlideHUD", 0.022, {
-        font = "Roboto",
-        weight = 400,
-    } )
-
     -- Client-only files
     Glide.IncludeDir( "glide/client/", true, false )
     Glide.IncludeDir( "glide/client/vgui/", true, false )

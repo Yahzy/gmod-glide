@@ -1,6 +1,6 @@
 # Glide // Styled's Vehicle Base
 
-A pack of content and entity classes to add cars, motorcycles, planes, helicopters and tanks to Garry's Mod.
+A pack of content and entity classes to add cars, motorcycles and boats to Garry's Mod.
 
 [![GLuaLint](https://github.com/StyledStrike/gmod-glide/actions/workflows/glualint.yml/badge.svg)](https://github.com/FPtje/GLuaFixer)
 [![Workshop Page](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Fshieldsio-steam-workshop.jross.me%2F3389728250%2Fsubscriptions-text)](https://steamcommunity.com/sharedfiles/filedetails/?id=3389728250)
@@ -8,34 +8,26 @@ A pack of content and entity classes to add cars, motorcycles, planes, helicopte
 
 ## Features
 
-- Includes base classes for cars, motorcycles, helicopters, planes, tanks and boats
+- Includes base classes for cars, motorcycles and boats
 - Duplicator/Advanced Duplicator 2 support
 - You can use the regular sandbox Color tool
 - No constraints are used for wheel physics
-- Comes with 7 cars, a bus, a truck + trailer, a ATV, 3 motorcycles, 2 boats, 3 planes and a tank
+- Comes with 7 cars, 3 motorcycles and 2 boats
 - First person and GTA-like third person camera
-- Players can fall off motorcycles
 - Vehicles can set custom player poses per seat
 - Editable engine/transmission/traction properties for cars and motorcycles
 - Car headlights, reverse lights, break lights, horns and sirens for emergency vehicles
 - Separate chassis and engine health
-- Vehicle turrets are lag compensated (currently in a limited fashion)
-- All vehicles (except tanks) can be controlled with Wiremod
-- Show indicators while driving/flying near the skybox (invisible map walls)
+- All vehicles can be controlled with Wiremod
 
 ### Player settings
 
 - Camera sensitivity, distance, FOV, and auto-center
 - 3 mouse input modes for flying: Point-to-aim (LFS), Control movement directly (WAC) and Free camera (GTA V)
 - Custom key binds, manual gear shifting toggle
-- Change the volume for land vehicles, aircraft and explosions
+- Change the volume for land vehicles and explosions
 - Change the volume of all Glide vehicles when someone is talking on voice chat
 - Toggle headlight shadows, automatic headlights, and many others
-
-### SWEPS
-
-- `Vehicle Repair` SWEP, shows the chassis and engine health
-- `Homing Launcher` SWEP, can also lock on any player on a seat
 
 ### Tools
 

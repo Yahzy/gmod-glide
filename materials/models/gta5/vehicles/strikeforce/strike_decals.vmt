@@ -1,6 +1,0 @@
-"VertexlitGeneric"
-{
-	"$basetexture" "models/gta5/vehicles/strikeforce/strike_decals"
-	"$translucent" "1"
-	"$allowdiffusemodulation" "false"
-}

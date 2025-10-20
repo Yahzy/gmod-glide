@@ -215,24 +215,6 @@ Glide.AddSoundSet( "Glide.Damaged.ExhaustPop", 85, 90, 100, {
     "glide/engines/back_fire_pop_3.wav"
 } )
 
--- These stereo sounds are spatialized with the ")" flag.
--- https://developer.valvesoftware.com/wiki/Soundscripts#Spatial_Stereo
-Glide.AddSoundSet( "Glide.Damaged.AircraftEngine", 90, 95, 105, {
-    ")glide/aircraft/engine_fail_1.wav",
-    ")glide/aircraft/engine_fail_2.wav",
-    ")glide/aircraft/engine_fail_3.wav",
-    ")glide/aircraft/engine_fail_4.wav",
-    ")glide/aircraft/engine_fail_5.wav"
-} )
-
-Glide.AddSoundSet( "Glide.Damaged.AircraftEngineBreakdown", 80, 95, 105, {
-    "glide/aircraft/breakdown_1.wav",
-    "glide/aircraft/breakdown_2.wav",
-    "glide/aircraft/breakdown_3.wav",
-    "glide/aircraft/breakdown_4.wav",
-    "glide/aircraft/breakdown_5.wav"
-} )
-
 ----- Vehicle collision sounds
 
 Glide.AddSoundSet( "Glide.Collision.VehicleScrape", 70, 80, 120, {

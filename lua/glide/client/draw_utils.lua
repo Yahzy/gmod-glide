@@ -19,19 +19,6 @@ local DrawTexturedRectRotated = surface.DrawTexturedRectRotated
 
 local COLOR_WHITE = Color( 255, 255, 255, 255 )
 
-function Glide.DrawWeaponCrosshair( x, y, icon, size, color )
-    size = Floor( ScrH() * size )
-    color = color or COLOR_WHITE
-
-    if not cache[icon] then
-        cache[icon] = Material( icon, "smooth" )
-    end
-
-    SetMaterial( cache[icon] )
-    SetColor( color:Unpack() )
-    DrawTexturedRectRotated( x, y, size, size, 0 )
-end
-
 function Glide.DrawIcon( x, y, icon, size, color, angle )
     if not cache[icon] then
         cache[icon] = Material( icon, "smooth" )

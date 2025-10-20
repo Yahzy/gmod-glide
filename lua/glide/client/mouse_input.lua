@@ -24,25 +24,8 @@ function MouseInput:Activate()
         return
     end
 
-    -- If the local player is the pilot of a aircraft, with direct mouse flying enabled...
-    if Glide.IsAircraft( vehicle ) and Config.mouseFlyMode == Glide.MOUSE_FLY_MODE.DIRECT then
-        -- Activate mouse flying controls.
-        self:Prepare()
-
-        hook.Add( "HUDPaint", "Glide.DrawMouseInput", function()
-            self:DrawFlyingHUD()
-        end )
-
-        hook.Add( "InputMouseApply", "Glide.UpdateMouseInput", function( _, x, y )
-            self:ApplyFlyingInput( x, y )
-        end )
-
-        return
-    end
-
     -- If the local player is not on a aircraft, with direct mouse steering enabled...
     if
-        not Glide.IsAircraft( vehicle )
         and Config.mouseSteerMode == Glide.MOUSE_STEER_MODE.DIRECT
         and vehicle:GetCameraType( 1 ) == Glide.CAMERA_TYPE.CAR
     then

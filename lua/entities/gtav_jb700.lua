@@ -84,18 +84,6 @@ if SERVER then
     function ENT:CreateFeatures()
         self.switchBaseDelay = 0.4
 
-        self:CreateWeapon( "base", {
-            Spread = 0.5,
-            Damage = 40,
-            TracerScale = 0.5,
-            SingleShotSound = "Glide.JB700.Fire",
-            FireDelay = 0.25,
-            ProjectileOffsets = {
-                Vector( 72, 30, 16 ),
-                Vector( 72, -30, 16 )
-            }
-        } )
-
         self:SetSuspensionLength( 8 )
         self:SetCounterSteer( 0.4 )
         self:SetSpringStrength( 600 )

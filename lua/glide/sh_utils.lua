@@ -33,10 +33,6 @@ function Glide.HideEntity( ent, hide )
     end
 end
 
-function Glide.IsAircraft( vehicle )
-    return vehicle.VehicleType == Glide.VEHICLE_TYPE.HELICOPTER or vehicle.VehicleType == Glide.VEHICLE_TYPE.PLANE
-end
-
 function Glide.IsValidModel( model )
     if type( model ) ~= "string" then
         return false

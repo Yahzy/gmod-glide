@@ -93,9 +93,6 @@ function ENT:SetupDataTables()
     self:NetworkVarNotify( "EngineState", self.OnEngineStateChange )
 
     if CLIENT then
-        -- Callback used to play/stop the lock-on sound clientside
-        self:NetworkVarNotify( "LockOnState", self.OnLockOnStateChange )
-
         -- Callback used to update the light color
         self:NetworkVarNotify( "HeadlightColor", self.OnHeadlightColorChange )
     end

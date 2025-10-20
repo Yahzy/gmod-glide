@@ -12,28 +12,6 @@ commands[Glide.CMD_VIEW_PUNCH] = function()
     Glide.Camera:ViewPunch( net.ReadFloat() )
 end
 
-commands[Glide.CMD_NOTIFY] = function()
-    local data = Glide.ReadTable()
-
-    if string.sub( data.text, 1, 1 ) == "#" then
-        data.text = language.GetPhrase( data.text )
-    end
-
-    Glide.Notify( data )
-end
-
-commands[Glide.CMD_SHOW_KEY_NOTIFICATION] = function()
-    local text = net.ReadString()
-    local icon = net.ReadString()
-    local inputGroup = net.ReadString()
-    local inputAction = net.ReadString()
-    local button = Glide.Config:GetInputActionButton( inputAction, inputGroup )
-
-    if button then
-        Glide.ShowKeyTip( text, button, icon, true )
-    end
-end
-
 commands[Glide.CMD_SET_CURRENT_VEHICLE] = function()
     local ply = LocalPlayer()
     local vehicle = net.ReadEntity()

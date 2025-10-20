@@ -42,7 +42,6 @@ A pack of content and entity classes to add cars, motorcycles and boats to Garry
 - Custom tags when looking at Glide vehicles
 - Custom tags when looking at players while driving Glide vehicles
 - Lots of optimizations (model LODs, client-side vehicle sounds/animations only play when they are near you, etc)
-- Custom notifications system
 
 ## Server console variables
 

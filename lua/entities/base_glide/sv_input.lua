@@ -111,17 +111,8 @@ function ENT:SetInputBool( seatIndex, action, pressed )
             self:ChangeTurnSignalState( self:GetTurnSignalState() == 2 and 0 or 2 )
         end
 
-    elseif action == "detach_trailer" and self.socketCount > 0 then
-        self:DisconnectAllSockets()
-
     elseif action == "throttle_modifier" and self.inputThrottleModifierMode == 2 then
         self.inputThrottleModifierToggle = not self.inputThrottleModifierToggle
-
-        Glide.SendNotification( self:GetAllPlayers(), {
-            text = "#glide.notify.reduced_throttle_" .. ( self.inputThrottleModifierToggle and "on" or "off" ),
-            icon = "materials/glide/icons/" .. ( self.inputThrottleModifierToggle and "play_next" or "fast_forward" ) .. ".png",
-            immediate = true
-        } )
     end
 
     if action == "toggle_engine" then

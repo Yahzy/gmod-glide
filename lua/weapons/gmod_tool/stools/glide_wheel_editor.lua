@@ -161,13 +161,6 @@ function TOOL:LeftClick( trace )
         local ply = self:GetOwner()
 
         if wheel.GlideIsHidden then
-            Glide.SendNotification( ply, {
-                text = "#tool.glide_wheel_editor.vehicle_model",
-                icon = "materials/icon16/cancel.png",
-                sound = "glide/ui/radar_alert.wav",
-                immediate = true
-            } )
-
             return false
         end
 

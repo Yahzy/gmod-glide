@@ -314,23 +314,6 @@ if SERVER then
     ENT.LightBodygroups = {}
 
     --[[
-        Socket properties for the trailer attachment system.
-        Should contain a array of tables, where each table looks like this:
-
-        { offset = Vector( ... ), id = "TruckSocket", isReceptacle = true }   -- On a vehicle
-        { offset = Vector( ... ), id = "TruckSocket", isReceptacle = false }  -- On a trailer
-
-        You can set `id` to any string, but only sockets with the same `id` can connect to eachother.
-        Sockets with `isReceptacle = false` can only connect to sockets with `isReceptacle = true`.
-
-        Sockets with `isReceptacle = true` can take a optional `forceLimit` parameter. Default is 80000.
-
-        Sockets with `isReceptacle = false` can take optional `connectForce` and `connectDrag` parameters,
-        with their default values being `connectForce = 700` and `connectDrag = 15`.
-    ]]
-    ENT.Sockets = {}
-
-    --[[
         The following parameters are relevant only if
         the vehicle calls the `ENT:SimulateBoat` function.
     ]]
@@ -407,14 +390,7 @@ if SERVER then
     function ENT:OnDriverExit() end
     function ENT:OnSeatInput( _seatIndex, _action, _pressed ) end
 
-    function ENT:OnWeaponFire( _weapon, _weaponIndex )
-        return true -- Allow the VSWEP script to run it's own weapon fire logic
-    end
-
     function ENT:OnPostThink( _dt, _selfTbl ) end
     function ENT:OnSimulatePhysics( _phys, _dt, _outLin, _outAng ) end
     function ENT:OnUpdateFeatures( _dt ) end
-
-    function ENT:OnSocketConnect( _socket, _otherVehicle ) end
-    function ENT:OnSocketDisconnect( _socket ) end
 end

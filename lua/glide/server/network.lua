@@ -143,27 +143,6 @@ end )
 
 local type = type
 
---- Send a notification message to the target(s).
-function Glide.SendNotification( target, data )
-    if type( target ) == "table" and #target == 0 then return end
-
-    Glide.StartCommand( Glide.CMD_NOTIFY )
-    Glide.WriteTable( data )
-    net.Send( target )
-end
-
---- Send a notification about a button action message to the target(s).
-function Glide.SendButtonActionNotification( target, text, icon, inputGroup, inputAction )
-    if type( target ) == "table" and #target == 0 then return end
-
-    Glide.StartCommand( Glide.CMD_SHOW_KEY_NOTIFICATION )
-    net.WriteString( text )
-    net.WriteString( icon )
-    net.WriteString( inputGroup )
-    net.WriteString( inputAction )
-    net.Send( target )
-end
-
 --- Apply a camera shake to the target's Glide camera.
 function Glide.SendViewPunch( target, force )
     if type( target ) == "table" and #target == 0 then return end
@@ -171,17 +150,4 @@ function Glide.SendViewPunch( target, force )
     Glide.StartCommand( Glide.CMD_VIEW_PUNCH, false )
     net.WriteFloat( force )
     net.Send( target )
-end
-
---- Send a notification to a player when they try to use
---- a tool that requires Wiremod, while it's is not installed.
-function Glide.ToolCheckMissingWiremod( target )
-    if WireLib then return end
-
-    Glide.SendNotification( target, {
-        text = "#glide.tool_wiremod_not_available",
-        icon = "materials/icon16/cancel.png",
-        sound = "glide/ui/radar_alert.wav",
-        immediate = true
-    } )
 end

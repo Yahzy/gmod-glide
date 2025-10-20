@@ -26,13 +26,6 @@ function TOOL:LeftClick( trace )
 
     if SERVER then
         if veh.wheelCount < 1 then
-            Glide.SendNotification( self:GetOwner(), {
-                text = "#tool.glide_water_driving.no_wheels",
-                icon = "materials/icon16/cancel.png",
-                sound = "glide/ui/radar_alert.wav",
-                immediate = true
-            } )
-
             return false
         end
 

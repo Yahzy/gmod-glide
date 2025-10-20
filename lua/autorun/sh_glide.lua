@@ -288,11 +288,6 @@ if CLIENT then
     require( "styled_theme_tabbed_frame" )
     require( "styled_theme_file_browser" )
 
-    StyledTheme.RegisterFont( "GlideNotification", 0.022, {
-        font = "Roboto",
-        weight = 500,
-    } )
-
     StyledTheme.RegisterFont( "GlideHUD", 0.022, {
         font = "Roboto",
         weight = 400,

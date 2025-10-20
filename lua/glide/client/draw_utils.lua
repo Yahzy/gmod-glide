@@ -10,7 +10,6 @@ function Glide.GetCachedIcon( path )
     return cache[path]
 end
 
-local ScrH = ScrH
 local Floor = math.floor
 
 local SetColor = surface.SetDrawColor

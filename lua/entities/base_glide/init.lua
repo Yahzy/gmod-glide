@@ -10,7 +10,6 @@ include( "sv_input.lua" )
 include( "sv_damage.lua" )
 include( "sv_wheels.lua" )
 include( "sv_lights.lua" )
-include( "sv_sockets.lua" )
 include( "sv_water.lua" )
 include( "sh_vehicle_compat.lua" )
 
@@ -166,9 +165,6 @@ function ENT:Initialize()
     -- Setup wheel system
     self:WheelInit()
 
-    -- Setup the trailer attachment system
-    self:SocketInit()
-
     -- Setup water-related logic
     self:WaterInit()
 
@@ -303,17 +299,8 @@ end
 
 --- Makes so only the vehicle creator and prop
 --- protection buddies can enter this vehicle.
-function ENT:SetLocked( isLocked, doNotNotify )
+function ENT:SetLocked( isLocked )
     self:SetIsLocked( isLocked )
-
-    if doNotNotify then return end
-
-    Glide.SendNotification( self:GetAllPlayers(), {
-        text = "#glide.notify." .. ( isLocked and "vehicle_locked" or "vehicle_unlocked" ),
-        icon = "materials/glide/icons/" .. ( isLocked and "locked" or "unlocked" ) .. ".png",
-        sound = isLocked and "doors/latchlocked2.wav" or "doors/latchunlocked1.wav",
-        immediate = true
-    } )
 end
 
 local IsValid = IsValid
@@ -672,11 +659,6 @@ function ENT:Think()
         self:WheelThink( dt )
     end
 
-    -- Update trailer sockets
-    if selfTbl.socketCount > 0 then
-        self:SocketThink( dt, time )
-    end
-
     -- Update bodygroups
     self:UpdateLightBodygroups()
 
@@ -747,7 +729,7 @@ function ENT:TriggerInput( name, value )
         end
 
     elseif name == "LockVehicle" then
-        self:SetLocked( value > 0, true )
+        self:SetLocked( value > 0 )
 
     elseif name == "Headlights" then
         self:ChangeHeadlightState( value, true )

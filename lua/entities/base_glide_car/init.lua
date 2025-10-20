@@ -225,36 +225,6 @@ function ENT:OnSeatInput( seatIndex, action, pressed )
     end
 end
 
---- Override this base class function.
-function ENT:OnSocketConnect( socket, _otherVehicle )
-    if not socket.isReceptacle then return end
-
-    local driver = self:GetDriver()
-    if not IsValid( driver ) then return end
-
-    Glide.SendButtonActionNotification(
-        driver,
-        "#glide.notify.tip.trailer_attached",
-        "materials/glide/icons/trailer.png",
-        "land_controls",
-        "detach_trailer"
-    )
-end
-
---- Override this base class function.
-function ENT:OnSocketDisconnect( socket )
-    if not socket.isReceptacle then return end
-
-    local driver = self:GetDriver()
-    if not IsValid( driver ) then return end
-
-    Glide.SendNotification( driver, {
-        text = "#glide.notify.tip.trailer_detached",
-        icon = "materials/glide/icons/trailer.png",
-        immediate = true
-    } )
-end
-
 local TriggerOutput = WireLib and WireLib.TriggerOutput or nil
 
 function ENT:ChangeSirenState( state )

@@ -17,15 +17,6 @@ Glide.MAX_SEATS = 10
 -- Explosions are only transmitted to nearby players
 Glide.MAX_EXPLOSION_DISTANCE = 15000
 
--- Enable lock-on for these entity classes
-Glide.LOCKON_WHITELIST = {
-    ["base_glide"] = true,
-    ["base_glide_car"] = true,
-    ["base_glide_boat"] = true,
-    ["base_glide_motorcycle"] = true,
-    ["prop_vehicle_prisoner_pod"] = true
-}
-
 -- Mouse flying control modes
 Glide.MOUSE_FLY_MODE = {
     AIM = 0,        -- Point-to-aim

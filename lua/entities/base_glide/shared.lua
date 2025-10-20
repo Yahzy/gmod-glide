@@ -45,9 +45,6 @@ function ENT:SetupDataTables()
     self:NetworkVar( "Bool", "IsEngineOnFire" )
     self:NetworkVar( "Bool", "IsLocked" )
 
-    self:NetworkVar( "Int", "LockOnState" )
-    self:NetworkVar( "Entity", "LockOnTarget" )
-
     self:NetworkVar( "Float", "ChassisHealth" )
     self:NetworkVar( "Float", "EngineHealth" )
 
@@ -81,9 +78,6 @@ function ENT:SetupDataTables()
     self:SetDriver( NULL )
     self:SetEngineState( 0 )
     self:SetIsEngineOnFire( false )
-
-    self:SetLockOnState( 0 )
-    self:SetLockOnTarget( NULL )
 
     self:SetBrakeValue( 0 )
     self:SetHeadlightState( 0 )
@@ -278,14 +272,6 @@ if SERVER then
 
     -- Damage multiplier for engine fire
     ENT.ChassisFireDamageMultiplier = 0.01
-
-    -- Given a dot product between the vehicle's forward direction
-    -- and the direction to a lock-on target, how large must that dot product be
-    -- for the target to be considered on the vehicle's "field of view"?
-    ENT.LockOnThreshold = 0.95
-
-    -- Max. distance to search for lock-on targets
-    ENT.LockOnMaxDistance = 20000
 
     -- Play a heavy metal noise when hitting things hard
     ENT.IsHeavyVehicle = false

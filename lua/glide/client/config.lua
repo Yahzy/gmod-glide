@@ -51,13 +51,6 @@ function Config:Reset()
     self.headlightShadows = true
     self.reduceTireParticles = false
 
-    -- HUD settings
-    self.showHUD = true
-    self.showPassengerList = true
-    self.showCustomHealth = true
-    self.showEmptyVehicleHealth = false
-    self.useKMH = false
-
     -- Misc. settings
     self.manualGearShifting = false
     self.throttleModifierMode = 0
@@ -154,12 +147,6 @@ function Config:Save( immediate )
         reduceTireParticles = self.reduceTireParticles,
 
         -- Misc. settings
-        showHUD = self.showHUD,
-        showPassengerList = self.showPassengerList,
-        showCustomHealth = self.showCustomHealth,
-        showEmptyVehicleHealth = self.showEmptyVehicleHealth,
-        useKMH = self.useKMH,
-
         manualGearShifting = self.manualGearShifting,
         throttleModifierMode = self.throttleModifierMode,
         autoHeadlightOn = self.autoHeadlightOn,
@@ -265,12 +252,6 @@ function Config:Load()
     LoadBool( "reduceTireParticles", false )
 
     -- Misc. settings
-    LoadBool( "showHUD", true )
-    LoadBool( "showPassengerList", true )
-    LoadBool( "showCustomHealth", true )
-    LoadBool( "showEmptyVehicleHealth", false )
-    LoadBool( "useKMH", false )
-
     SetNumber( self, "throttleModifierMode", data.throttleModifierMode, 0, 2, self.throttleModifierMode )
     LoadBool( "manualGearShifting", false )
     LoadBool( "autoHeadlightOn", true )
@@ -885,33 +866,6 @@ function Config:OpenFrame()
 
     CreateToggle( panelMisc, L"performance.reduce_tire_particles", self.reduceTireParticles, function( value )
         self.reduceTireParticles = value
-        self:Save()
-    end )
-
-    CreateHeader( panelMisc, L"settings.hud", 0 )
-
-    CreateToggle( panelMisc, L"misc.show_hud", self.showHUD, function( value )
-        self.showHUD = value
-        self:Save()
-    end )
-
-    CreateToggle( panelMisc, L"misc.show_passenger_list", self.showPassengerList, function( value )
-        self.showPassengerList = value
-        self:Save()
-    end )
-
-    CreateToggle( panelMisc, L"misc.show_custom_health", self.showCustomHealth, function( value )
-        self.showCustomHealth = value
-        self:Save()
-    end )
-
-    CreateToggle( panelMisc, L"misc.show_health_empty_vehicles", self.showEmptyVehicleHealth, function( value )
-        self.showEmptyVehicleHealth = value
-        self:Save()
-    end )
-
-    CreateToggle( panelMisc, L"misc.use_kmh", self.useKMH, function( value )
-        self.useKMH = value
         self:Save()
     end )
 

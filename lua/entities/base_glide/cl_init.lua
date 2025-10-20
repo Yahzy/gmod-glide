@@ -1,6 +1,5 @@
 include( "shared.lua" )
 include( "cl_lights.lua" )
-include( "cl_hud.lua" )
 include( "cl_water.lua" )
 include( "sh_vehicle_compat.lua" )
 
@@ -40,11 +39,6 @@ function ENT:Initialize()
 end
 
 function ENT:OnRemove( fullUpdate )
-    if self.lockOnSound then
-        self.lockOnSound:Stop()
-        self.lockOnSound = nil
-    end
-
     if fullUpdate then return end
 
     if self.rfSounds then

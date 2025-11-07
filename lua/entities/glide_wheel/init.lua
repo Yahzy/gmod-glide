@@ -261,8 +261,6 @@ do
     end
 end
 
-local MAP_SURFACE_OVERRIDES = Glide.MAP_SURFACE_OVERRIDES
-
 local PI = math.pi
 local TAU = math.pi * 2
 
@@ -314,7 +312,7 @@ function ENT:DoPhysics( vehicle, phys, traceFilter, outLin, outAng, dt, vehSurfa
 
     -- Update ground contact NW variables
     surfaceId = ray.Hit and ( ray.MatType or 0 ) or 0
-    surfaceId = MAP_SURFACE_OVERRIDES[surfaceId] or surfaceId
+    surfaceId = Glide.MAP_SURFACE_OVERRIDES and Glide.MAP_SURFACE_OVERRIDES[surfaceId] or surfaceId
 
     state.isOnGround = ray.Hit
     self:SetContactSurface( surfaceId )

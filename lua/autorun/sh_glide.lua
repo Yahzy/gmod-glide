@@ -157,6 +157,7 @@ CreateConVar( "sbox_maxglide_engine_stream_chips", "3", FCVAR_ARCHIVE + FCVAR_NO
 -- Gib convars
 CreateConVar( "glide_gib_lifetime", "8", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Lifetime of Glide Gibs, 0 for no despawning.", 0 )
 CreateConVar( "glide_gib_enable_collisions", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "When set to 0, gibs wont collide with players/props.", 0, 1 )
+CreateConVar("glide_bodygroupdamage_giblifetime", "15", {FCVAR_ARCHIVE}, "Lifetime of gibs from bodygroup damage in seconds.")
 
 list.Set( "ContentCategoryIcons", "Glide", "materials/glide/icons/car.png" )
 

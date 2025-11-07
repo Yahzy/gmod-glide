@@ -38,6 +38,10 @@ if SERVER then
             ply = source:CPPIGetOwner()
         end
 
+        if source.GetEntityOwner then
+            ply = source:GetEntityOwner()
+        end
+
         if type( ply ) == "number" then
             ply = nil
         end
@@ -56,6 +60,10 @@ if SERVER then
 
         if target.CPPISetOwner then
             target:CPPISetOwner( ply )
+        end
+
+        if target.SetEntityOwner then
+            target:SetEntityOwner( ply )
         end
     end
 

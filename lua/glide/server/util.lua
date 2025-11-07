@@ -202,6 +202,12 @@ function Glide.CanLockVehicle( ply, vehicle )
         end
     end
 
+    if vehicle.GetEntityOwner then
+        if vehicle:GetEntityOwner() == ply then
+            return true
+        end
+    end
+
     return hook.Run( "Glide_CanLockVehicle", ply, vehicle ) or false
 end
 

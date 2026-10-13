@@ -11,17 +11,14 @@ function ENT:OnPostInitialize()
     self:SetEnginePower( 0 )
     self:SetIsHonking( false )
 
-    -- Make boats more slidey on land
     local phys = self:GetPhysicsObject()
 
     if IsValid( phys ) then
+        -- Make boats more slidey on land
         phys:SetMaterial( "glass" )
-    end
 
-    -- Trigger wire outputs
-    if WireLib then
-        WireLib.TriggerOutput( self, "EngineThrottle", 0 )
-        WireLib.TriggerOutput( self, "EnginePower", 0 )
+        -- We do our own water physics
+        phys:SetBuoyancyRatio( 0.0 )
     end
 end
 
@@ -29,15 +26,20 @@ end
 function ENT:OnDriverEnter()
     if self.startupTimer then return end
 
-    if self:GetEngineState() < 2 then
+    if self:GetEngineState() < 2 and self.autoTurnOnEngine then
         self:TurnOn()
     end
 end
 
 --- Implement this base class function.
 function ENT:OnDriverExit()
+    local keepOn = IsValid( self.lastDriver ) and self.lastDriver:KeyDown( IN_WALK )
+
+    if not keepOn then
+        self:TurnOff()
+    end
+
     self:SetIsHonking( false )
-    self:TurnOff()
 end
 
 --- Implement this base class function.
@@ -79,7 +81,6 @@ local Clamp = math.Clamp
 local WORLD_UP = Vector( 0, 0, 1 )
 
 local ExpDecay = Glide.ExpDecay
-local TriggerOutput = WireLib and WireLib.TriggerOutput or nil
 
 --- Implement this base class function.
 function ENT:OnPostThink( dt, selfTbl )
@@ -128,24 +129,6 @@ function ENT:OnPostThink( dt, selfTbl )
             self:TurnOff()
         end
     end
-
-    if TriggerOutput then
-        TriggerOutput( self, "EngineThrottle", self:GetEngineThrottle() )
-        TriggerOutput( self, "EnginePower", self:GetEnginePower() )
-
-        if selfTbl.wireSetEngineOn ~= nil then
-            if selfTbl.wireSetEngineOn then
-                if state < 1 then
-                    self:TurnOn()
-                end
-
-            elseif state > 0 then
-                self:TurnOff()
-            end
-
-            selfTbl.wireSetEngineOn = nil
-        end
-    end
 end
 
 function ENT:UpdateEngine( dt, selfTbl )
@@ -176,47 +159,6 @@ function ENT:UpdateEngine( dt, selfTbl )
 end
 
 --- Implement this base class function.
-function ENT:OnSimulatePhysics( phys, dt, outLin, outAng )
-    self:SimulateBoat( phys, dt, outLin, outAng, self:GetEngineThrottle(), self:GetInputFloat( 1, "steer" ) )
-end
-
---- Override this base class function.
-function ENT:TriggerInput( name, value )
-    BaseClass.TriggerInput( self, name, value )
-
-    if name == "Ignition" then
-        -- Avoid continuous triggers
-        self.wireSetEngineOn = value > 0
-
-    elseif name == "Throttle" then
-        self:SetInputFloat( 1, "accelerate", Clamp( value, 0, 1 ) )
-
-    elseif name == "Steer" then
-        self:SetInputFloat( 1, "steer", Clamp( value, -1, 1 ) )
-
-    elseif name == "Brake" then
-        self:SetInputFloat( 1, "brake", Clamp( value, 0, 1 ) )
-
-    elseif name == "TightTurn" then
-        self:SetInputBool( 1, "handbrake", value > 0 )
-
-    elseif name == "Horn" then
-        self:SetIsHonking( value > 0 )
-
-    end
-end
-
---- Override this base class function.
-function ENT:SetupWiremodPorts( inputs, outputs )
-    BaseClass.SetupWiremodPorts( self, inputs, outputs )
-
-    inputs[#inputs + 1] = { "Ignition", "NORMAL", "1: Turn the engine on\n0: Turn the engine off" }
-    inputs[#inputs + 1] = { "Steer", "NORMAL", "A value between -1.0 and 1.0" }
-    inputs[#inputs + 1] = { "Throttle", "NORMAL", "A value between 0.0 and 1.0\nAlso acts as brake input when reversing." }
-    inputs[#inputs + 1] = { "Brake", "NORMAL", "A value between 0.0 and 1.0\nAlso acts as throttle input when reversing." }
-    inputs[#inputs + 1] = { "TightTurn", "NORMAL", "A value larger than 0 will let the boat do tight turns" }
-    inputs[#inputs + 1] = { "Horn", "NORMAL", "Set to 1 to sound the horn" }
-
-    outputs[#outputs + 1] = { "EngineThrottle", "NORMAL", "Current engine throttle" }
-    outputs[#outputs + 1] = { "EnginePower", "NORMAL", "Current engine power" }
+function ENT:OnSimulatePhysics( phys, dt, outLin, outAng, selfTbl )
+    selfTbl.SimulateBoat( self, phys, dt, outLin, outAng, selfTbl.GetEngineThrottle( self ), selfTbl.GetInputFloat( self, 1, "steer" ) )
 end

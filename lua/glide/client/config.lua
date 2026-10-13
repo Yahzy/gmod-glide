@@ -38,6 +38,7 @@ function Config:Reset()
     self.rollMouseAxis = 1 -- X
     self.mouseDeadzone = 0.15
     self.mouseShow = true
+    self.mouseFlyDecayRate = 0.0
 
     self.mouseSteerMode = Glide.MOUSE_STEER_MODE.DISABLED
     self.mouseSteerSensitivity = 0.5
@@ -57,6 +58,7 @@ function Config:Reset()
     self.autoHeadlightOn = true
     self.autoHeadlightOff = true
     self.autoTurnOffLights = true
+    self.autoTurnOnEngine = true
 end
 
 --- Reset bind actions to their default buttons.
@@ -71,6 +73,22 @@ function Config:ResetBinds()
             binds[groupId][action] = button
         end
     end
+
+    -- Use the player's movement keys for these binds, for users with different keyboard layouts
+    local SetButtonFromBinding = function( bind, groupId, action )
+        local keyName = input.LookupBinding( bind )
+        if not keyName then return end
+
+        local buttonCode = input.GetKeyCode( keyName )
+        if not buttonCode then return end
+
+        binds[groupId][action] = buttonCode
+    end
+
+    SetButtonFromBinding( "+forward", "land_controls", "accelerate" )
+    SetButtonFromBinding( "+back", "land_controls", "brake" )
+    SetButtonFromBinding( "+moveleft", "land_controls", "steer_left" )
+    SetButtonFromBinding( "+moveright", "land_controls", "steer_right" )
 
     self.binds = binds
 end
@@ -127,6 +145,7 @@ function Config:Save( immediate )
         mouseSensitivityY = self.mouseSensitivityY,
         mouseInvertX = self.mouseInvertX,
         mouseInvertY = self.mouseInvertY,
+        mouseFlyDecayRate = self.mouseFlyDecayRate,
 
         mouseSteerMode = self.mouseSteerMode,
         mouseSteerSensitivity = self.mouseSteerSensitivity,
@@ -152,6 +171,7 @@ function Config:Save( immediate )
         autoHeadlightOn = self.autoHeadlightOn,
         autoHeadlightOff = self.autoHeadlightOff,
         autoTurnOffLights = self.autoTurnOffLights,
+        autoTurnOnEngine = self.autoTurnOnEngine,
 
         -- Group-to-action-to-button dictionary
         binds = self.binds
@@ -238,6 +258,7 @@ function Config:Load()
     SetNumber( self, "yawMouseAxis", data.yawMouseAxis, 0, 2, self.yawMouseAxis )
     SetNumber( self, "rollMouseAxis", data.rollMouseAxis, 0, 2, self.rollMouseAxis )
     SetNumber( self, "mouseDeadzone", data.mouseDeadzone, 0, 1, self.mouseDeadzone )
+    SetNumber( self, "mouseFlyDecayRate", data.mouseFlyDecayRate, 0, 3, self.mouseFlyDecayRate )
 
     self.mouseSteerMode = math.Round( Glide.ValidateNumber( data.mouseSteerMode, 0, 2, self.mouseSteerMode ) )
     SetNumber( self, "mouseSteerSensitivity", data.mouseSteerSensitivity, 0.05, 3, self.mouseSteerSensitivity )
@@ -257,6 +278,7 @@ function Config:Load()
     LoadBool( "autoHeadlightOn", true )
     LoadBool( "autoHeadlightOff", true )
     LoadBool( "autoTurnOffLights", true )
+    LoadBool( "autoTurnOnEngine", true )
 
     -- Group-to-action-to-button dictionary
     local loadedBinds = type( data.binds ) == "table" and data.binds or {}
@@ -299,6 +321,7 @@ function Config:TransmitInputSettings( immediate )
 
         -- Misc. settings
         autoTurnOffLights = self.autoTurnOffLights,
+        autoTurnOnEngine = self.autoTurnOnEngine,
 
         -- Action-key dictionary
         binds = self.binds
@@ -481,7 +504,7 @@ function Config:OpenFrame()
 
     self.frame = frame
 
-    ----- Go back to last open tab ----- 
+    ----- Go back to last open tab -----
 
     timer.Simple( 0, function()
         if IsValid( self.frame ) then
@@ -710,6 +733,11 @@ function Config:OpenFrame()
             self:Save()
         end )
 
+        CreateSlider( directMouseFlyPanel, L"mouse.decay_rate", self.mouseFlyDecayRate, 0, 3, 1, function( value )
+            self.mouseFlyDecayRate = value
+            self:Save()
+        end )
+
         CreateToggle( directMouseFlyPanel, L"mouse.show_hud", self.mouseShow, function( value )
             self.mouseShow = value
             self:Save()
@@ -887,6 +915,12 @@ function Config:OpenFrame()
         self:TransmitInputSettings()
     end )
 
+    CreateToggle( panelMisc, L"misc.turn_on_engine", self.autoTurnOnEngine, function( value )
+        self.autoTurnOnEngine = value
+        self:Save()
+        self:TransmitInputSettings()
+    end )
+
     CreateHeader( panelMisc, L"settings.reset" )
 
     CreateButton( panelMisc, L"misc.reset_binds", function()
@@ -929,6 +963,9 @@ function Config:OpenFrame()
             { name = "glide_gib_lifetime", decimals = 0, min = 0, max = 60 },
             { name = "glide_gib_enable_collisions", decimals = 0, min = 0, max = 1 },
             { name = "glide_allow_gravity_gun_punt", decimals = 0, min = 0, max = 1 },
+            { name = "glide_enable_damage_player_on_collision", decimals = 0, min = 0, max = 1 },
+            { name = "glide_always_can_enter_locked_vehicles", decimals = 0, min = 0, max = 1 },
+            { name = "glide_allow_player_weapons_in_vehicle", decimals = 0, min = 0, max = 1 },
         }
 
         for _, data in ipairs( cvarList ) do
@@ -994,27 +1031,7 @@ function Config:OpenFrame()
     end
 end
 
-local FrameTime = FrameTime
-local Approach = math.Approach
-
-local glideVolume = 1
-
-hook.Add( "Tick", "Glide.CheckVoiceActivity", function()
-    local isAnyoneTalking = false
-
-    for _, ply in ipairs( player.GetAll() ) do
-        if ply:IsVoiceAudible() and ply:VoiceVolume() > 0.05 then
-            isAnyoneTalking = true
-            break
-        end
-    end
-
-    glideVolume = Approach(
-        glideVolume,
-        isAnyoneTalking and Config.vcVolume or 1,
-        FrameTime() * ( isAnyoneTalking and 10 or 2 )
-    )
-end )
+local volumeMultiplier = 1.0
 
 -- Calculate the volume multiplier for a specific audio type,
 -- depending on settings and how loud the voice chat is.
@@ -1022,5 +1039,50 @@ end )
 -- audioType must be one of these:
 -- "carVolume", "explosionVolume", "hornVolume", "windVolume"
 function Config.GetVolume( audioType )
-    return Config[audioType] * glideVolume
+    return Config[audioType] * volumeMultiplier
 end
+
+-- Run the voice activity.
+-- Please note that any changes in the logic here require restarting
+-- the game to test, since many scripts localize `Config.GetVolume`.
+
+local FrameTime = FrameTime
+local Approach = math.Approach
+local PlayerIterator = player.Iterator
+
+local VoiceVolume = FindMetaTable( "Player" ).VoiceVolume
+local IsVoiceAudible = FindMetaTable( "Player" ).IsVoiceAudible
+local IsValid = IsValid
+
+local playerIndex = 0
+local isAnyoneTalking = false
+local shouldReduceVolume = false
+
+hook.Add( "Think", "Glide.DetectVoiceActivity", function()
+    -- Iterate over the list of players, checking for
+    -- voice activity on one player per frame.
+    local iterator, allPlayers = PlayerIterator()
+    local i, ply = iterator( allPlayers, playerIndex )
+
+    playerIndex = playerIndex + 1
+
+    if i and IsValid( ply ) and IsVoiceAudible( ply ) and VoiceVolume( ply ) > 0.01 then
+        isAnyoneTalking = true
+        i = nil -- Break out of the iteration early
+    end
+
+    -- When we reach the end of the iteration...
+    if not i then
+        shouldReduceVolume = isAnyoneTalking
+
+        -- Begin a new iteration
+        playerIndex = 0
+        isAnyoneTalking = false
+    end
+
+    volumeMultiplier = Approach(
+        volumeMultiplier,
+        shouldReduceVolume and Config.vcVolume or 1,
+        FrameTime() * ( shouldReduceVolume and 4 or 1 )
+    )
+end )

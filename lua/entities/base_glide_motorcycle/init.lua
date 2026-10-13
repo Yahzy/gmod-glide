@@ -30,10 +30,8 @@ end
 function ENT:SetStaySpright( toggle, dontWakePhys )
     self.stayUpright = toggle
 
-    local phys = self:GetPhysicsObject()
-
-    if not dontWakePhys and IsValid( phys ) then
-        phys:Wake()
+    if not dontWakePhys then
+        self:AwakePhysics()
     end
 end
 
@@ -52,6 +50,13 @@ function ENT:TurnOff()
     if not IsValid( driver ) and math.abs( self.totalSpeed ) > 100 then
         self:SetStaySpright( false )
     end
+end
+
+--- Override this base class function.
+function ENT:OnDriverEnter()
+    BaseClass.OnDriverEnter( self )
+
+    self:SetStaySpright( true )
 end
 
 --- Override this base class function.
@@ -80,8 +85,7 @@ function ENT:Use( activator )
         return
     end
 
-    activator:SetAllowWeaponsInVehicle( false )
-    activator:EnterVehicle( freeSeat )
+    Glide.EnterVehicleSeat( activator, self, freeSeat )
 end
 
 --- Override this base class function.
@@ -100,62 +104,62 @@ local Clamp = math.Clamp
 local ExpDecay = Glide.ExpDecay
 
 --- Override this base class function.
-function ENT:UpdateSteering( dt )
-    BaseClass.UpdateSteering( self, dt )
+function ENT:UpdateSteering( dt, selfTbl )
+    BaseClass.UpdateSteering( self, dt, selfTbl )
 
-    local isAnyWheelGrounded = self.groundedCount > 0
+    local isAnyWheelGrounded = selfTbl.groundedCount > 0
     local inputSteer = Clamp( self:GetInputFloat( 1, "steer" ), -1, 1 )
-    local sideSlip = Clamp( self.avgSideSlip, -1, 1 )
+    local sideSlip = Clamp( selfTbl.avgSideSlip, -1, 1 )
     local tilt = Clamp( sideSlip * -2, -0.5, 0.5 )
 
     if isAnyWheelGrounded then
-        tilt = tilt + inputSteer * Clamp( self.forwardSpeed / 300, 0, 1 )
+        tilt = tilt + inputSteer * Clamp( selfTbl.forwardSpeed / 300, 0, 1 )
 
-        if self.totalSpeed < 20 then
+        if selfTbl.totalSpeed < 20 then
             tilt = tilt - 0.3
         end
     end
 
-    self.steerTilt = ExpDecay( self.steerTilt, isAnyWheelGrounded and tilt or 0, 15, dt )
+    selfTbl.steerTilt = ExpDecay( selfTbl.steerTilt, isAnyWheelGrounded and tilt or 0, 15, dt )
 
     if
         isAnyWheelGrounded and
-        self:GetInputFloat( 1, "brake" ) > 0 and
-        self:GetInputFloat( 1, "accelerate" ) < 0.1 and
-        self.forwardSpeed < 10 and
-        self.forwardSpeed > -100
+        self:GetInputFloat( 1, "brake", selfTbl ) > 0 and
+        self:GetInputFloat( 1, "accelerate", selfTbl ) < 0.1 and
+        selfTbl.forwardSpeed < 10 and
+        selfTbl.forwardSpeed > -100
     then
-        self.reverseInput = 1 - Clamp( self.forwardSpeed / -100, 0, 1 )
-        self.frontBrake = 0
-        self.rearBrake = 0
-        self.clutch = 1
+        selfTbl.reverseInput = 1 - Clamp( selfTbl.forwardSpeed / -100, 0, 1 )
+        selfTbl.frontBrake = 0
+        selfTbl.rearBrake = 0
+        selfTbl.clutch = 1
         self:SetBrakeValue( 0 )
     else
-        self.reverseInput = 0
+        selfTbl.reverseInput = 0
     end
 
     -- Allow the motorcycle to fall if the physobj goes asleep without a driver
-    if not self.stayUpright then return end
+    if not selfTbl.stayUpright then return end
 
     local driver = self:GetDriver()
     local phys = self:GetPhysicsObject()
 
-    if not IsValid( driver ) and IsValid( phys ) and phys:IsAsleep() then
+    if not IsValid( driver ) and selfTbl.hasValidPhysics and phys:IsAsleep() then
         self:SetStaySpright( false, true )
     end
 end
 
 --- Override this base class function.
-function ENT:UpdateUnflip( _phys, _dt ) end
+function ENT:UpdateUnflip( _phys, _dt, _selfTbl ) end
 
 local WORLD_UP = Vector( 0, 0, 1 )
 
 --- Override this base class function.
-function ENT:OnSimulatePhysics( phys, _, outLin, outAng )
-    if not self.stayUpright then return end
+function ENT:OnSimulatePhysics( phys, _, outLin, outAng, selfTbl )
+    if not selfTbl.stayUpright then return end
     if self:IsPlayerHolding() then return end
 
-    local isAnyWheelGrounded = self.groundedCount > 0
+    local isAnyWheelGrounded = selfTbl.groundedCount > 0
     local angVel = phys:GetAngleVelocity()
     local mass = phys:GetMass()
 
@@ -163,19 +167,19 @@ function ENT:OnSimulatePhysics( phys, _, outLin, outAng )
     local angles = self:GetAngles()
 
     -- Wheelie
-    local leanBack = self:GetInputBool( 1, "lean_back" )
+    local leanBack = selfTbl.GetInputBool( self, 1, "lean_back" )
 
     if leanBack and isAnyWheelGrounded then
-        local strength = 1 - Clamp( Abs( angles[1] ) / self.WheelieMaxAng, 0, 1 )
+        local strength = 1 - Clamp( Abs( angles[1] ) / selfTbl.WheelieMaxAng, 0, 1 )
 
-        strength = strength * Clamp( self.totalSpeed / 200, 0, 1 )
-        strength = strength * Clamp( 1 - self.frontBrake - self.rearBrake, 0, 1 )
+        strength = strength * Clamp( selfTbl.totalSpeed / 200, 0, 1 )
+        strength = strength * Clamp( 1 - selfTbl.frontBrake - selfTbl.rearBrake, 0, 1 )
 
         -- Wheelie angular drag
-        outAng[2] = outAng[2] + angVel[2] * mass * self.WheelieDrag * strength
+        outAng[2] = outAng[2] + angVel[2] * mass * selfTbl.WheelieDrag * strength
 
-        local frontPos = self.wheels[1]:GetPos()
-        local l, a = phys:CalculateForceOffset( self:GetUp() * mass * strength * self.WheelieForce, frontPos )
+        local frontPos = selfTbl.wheels[1]:GetPos()
+        local l, a = phys:CalculateForceOffset( self:GetUp() * mass * strength * selfTbl.WheelieForce, frontPos )
 
         outLin[1] = outLin[1] + l[1]
         outLin[2] = outLin[2] + l[2]
@@ -190,13 +194,13 @@ function ENT:OnSimulatePhysics( phys, _, outLin, outAng )
     local dot = WORLD_UP:Dot( rt )
     dot = angles[3] > -90 and angles[3] < 90 and dot or -dot
 
-    local tiltForce = isAnyWheelGrounded and self.TiltForce or self.TiltForce * 0.2
+    local tiltForce = isAnyWheelGrounded and selfTbl.TiltForce or selfTbl.TiltForce * 0.2
 
-    outAng[1] = outAng[1] + self.steerTilt * mass * tiltForce
-    outAng[1] = outAng[1] + angVel[1] * mass * self.KeepUprightDrag
-    outAng[1] = outAng[1] + dot * mass * self.KeepUprightForce
+    outAng[1] = outAng[1] + selfTbl.steerTilt * mass * tiltForce
+    outAng[1] = outAng[1] + angVel[1] * mass * selfTbl.KeepUprightDrag
+    outAng[1] = outAng[1] + dot * mass * selfTbl.KeepUprightForce
 
-    local revForce = self:GetForward() * mass * self.reverseInput * -500
+    local revForce = self:GetForward() * mass * selfTbl.reverseInput * -500
 
     outLin[1] = outLin[1] + revForce[1]
     outLin[2] = outLin[2] + revForce[2]

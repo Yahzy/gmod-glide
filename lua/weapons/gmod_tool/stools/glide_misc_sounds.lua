@@ -49,7 +49,7 @@ function TOOL:CanSendData()
         return false
     end
 
-    self.fireCooldown = t + 0.5
+    self.fireCooldown = t + 1
 
     return true
 end
@@ -66,13 +66,16 @@ function TOOL:LeftClick( trace )
     if CLIENT then
         if not game.SinglePlayer() and not IsFirstTimePredicted() then return end
 
-        local data = util.Compress( Glide.ToJSON( presetData ) )
+        local data = Glide.ToJSON( presetData )
         local size = #data
 
         if size > Glide.MAX_JSON_SIZE then
             Glide.Print( "Tried to write data that was too big! (%d/%d)", size, Glide.MAX_JSON_SIZE )
-            return
+            return false
         end
+
+        data = util.Compress( data )
+        size = #data
 
         Glide.StartCommand( Glide.CMD_UPLOAD_MISC_SOUNDS_PRESET, false )
         net.WriteEntity( veh )
@@ -135,21 +138,18 @@ end
 local function OnClickPickPath( s )
     local key = s._key
     local refresh = s._refreshFunction
-    local title = language.GetPhrase( "tool.glide_misc_sounds.browse_sound" )
 
-    local browser = StyledTheme.CreateFileBrowser()
-    browser:SetIcon( "icon16/sound.png" )
-    browser:SetTitle( string.format( title, key ) )
-    browser:SetExtensionFilter( { "mp3", "wav" } )
-    browser:SetBasePath( "sound/" )
-    browser:NavigateTo( Glide.miscSoundsToolLastDir or "/" )
-
-    browser.OnConfirmPath = function( path )
-        path = path:sub( 7 ) -- Remove "sound/"
+    local browser = Glide.OpenSoundBrowser( function( path )
         Glide.miscSoundsToolLastDir = string.GetPathFromFilename( path )
-
         SetPresetData( key, path )
         refresh()
+    end )
+
+    browser:SetTitle( string.format( language.GetPhrase( "tool.glide_misc_sounds.browse_sound" ), key ) )
+    browser:SetFileTypes( "*.wav *.mp3" )
+
+    if Glide.miscSoundsToolLastDir then
+        browser:SetCurrentFolder( Glide.miscSoundsToolLastDir )
     end
 end
 

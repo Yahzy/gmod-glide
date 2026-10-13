@@ -48,15 +48,8 @@ hook.Add( "PlayerEnteredVehicle", "Glide.OnEnterSeat", function( ply, seat )
 
     -- Store some variables on this player
     ply.IsUsingGlideVehicle = true
-    ply:SetNWEntity( "GlideVehicle", parent )
     ply:SetNWInt( "GlideSeatIndex", seatIndex )
     ply:DrawShadow( false )
-
-    -- Make sure the player knows about their current vehicle/seat
-    Glide.StartCommand( Glide.CMD_SET_CURRENT_VEHICLE, false )
-    net.WriteEntity( parent )
-    net.WriteUInt( seatIndex, 6 )
-    net.Send( ply )
 
     -- Enable vehicle input
     Glide.ActivateInput( ply, parent, seatIndex )
@@ -66,26 +59,24 @@ end )
 
 -- Once a player leaves a Glide vehicle, cleanup network variables
 -- and trigger the `Glide_OnExitVehicle` hook.
-hook.Add( "PlayerLeaveVehicle", "Glide.OnExitSeat", function( ply )
+hook.Add( "PlayerLeaveVehicle", "Glide.OnExitSeat", function( ply, seat )
     if not ply.IsUsingGlideVehicle then return end
 
-    local vehicle = ply:GlideGetVehicle()
-    local seatIndex = ply:GlideGetSeatIndex()
+    local seatIndex = seat.GlideSeatIndex
+    if not seatIndex then return end
+
+    local vehicle = seat:GetParent()
+    if not IsValid( vehicle ) then return end
+    if not vehicle.IsGlideVehicle then return end
 
     -- Disable vehicle input
     Glide.DeactivateInput( ply )
 
     -- Cleanup variables
     ply.IsUsingGlideVehicle = false
-    ply:SetNWEntity( "GlideVehicle", NULL )
     ply:SetNWInt( "GlideSeatIndex", 0 )
     ply:DrawShadow( true )
-
-    -- Make sure the player knows that they aren't on a vehicle anymore
-    Glide.StartCommand( Glide.CMD_SET_CURRENT_VEHICLE, false )
-    net.WriteEntity( NULL )
-    net.WriteUInt( 0, 6 )
-    net.Send( ply )
+    ply:SetAllowWeaponsInVehicle( false )
 
     if IsValid( vehicle ) then
         ply:SetPos( vehicle:GetSeatExitPos( seatIndex ) )
@@ -107,6 +98,16 @@ hook.Add( "PlayerLeaveVehicle", "Glide.OnExitSeat", function( ply )
     hook.Run( "Glide_OnExitVehicle", ply, vehicle )
 end )
 
+hook.Add( "AcceptInput", "Glide.VehicleAcceptLockInputs", function( ent, inputName )
+    if not IsValid( ent ) or not ent.IsGlideVehicle then return end
+
+    if inputName == "unlock" then
+        ent:SetLocked( false, true )
+    elseif inputName == "lock" then
+        ent:SetLocked( true, true )
+    end
+end )
+
 -- Validate editable float variables and let the vehicle know they have changed.
 hook.Add( "CanEditVariable", "Glide.ValidateEditVariables", function( ent, _, _, value, editor )
     if not ent.IsGlideVehicle then return end
@@ -117,14 +118,14 @@ hook.Add( "CanEditVariable", "Glide.ValidateEditVariables", function( ent, _, _,
 
     if value < editor.min then return false end
     if value > editor.max then return false end
+end )
+
+hook.Add( "VariableEdited", "Glide.EditVariables", function( ent, _, _, _, editor )
+    if not ent.IsGlideVehicle then return end
+    if not editor.min or not editor.max then return end
 
     ent.shouldUpdateWheelParams = true
-
-    local phys = ent:GetPhysicsObject()
-
-    if IsValid( phys ) then
-        phys:Wake()
-    end
+    ent:AwakePhysics()
 end )
 
 -- Block "Disable Collisions" option on tanks
@@ -183,10 +184,8 @@ hook.Add( "EntityTakeDamage", "Glide.OverrideDamage", function( target, dmginfo 
 end, HOOK_HIGH )
 
 -- Mute the ringing sound effect while inside a Glide vehicle.
-hook.Add( "OnDamagedByExplosion", "Glide.DisableRingingSound", function( _, dmginfo )
-    local inflictor = dmginfo:GetInflictor()
-
-    if IsValid( inflictor ) and inflictor.IsGlideVehicle then
+hook.Add( "OnDamagedByExplosion", "Glide.DisableRingingSound", function( ply, _ )
+    if IsValid( ply:GlideGetVehicle() ) then
         return true
     end
 end )
@@ -230,11 +229,13 @@ if not game.SinglePlayer() then return end
 local function ResetVehicle( vehicle )
     vehicle:ResetInputs( 1 )
     vehicle:SetDriver( NULL )
+    vehicle.autoTurnOffLights = false
     vehicle:TurnOff()
+    vehicle:SetEngineState( 0 )
 end
 
 local function ResetAll()
-    -- Restore NW variables for all Glide seats
+    -- Reset solid state for all Glide seats
     for _, seat in ipairs( ents.FindByClass( "prop_vehicle_prisoner_pod" ) ) do
         local seatIndex = seat.GlideSeatIndex
 
@@ -274,9 +275,10 @@ local function ResetAll()
     if not IsValid( parent ) then return end
     if not parent.IsGlideVehicle then return end
 
-    timer.Simple( 0, function()
-        ply:ExitVehicle()
+    parent.autoTurnOffLights = false
+    ply:ExitVehicle()
 
+    timer.Simple( 0, function()
         if IsValid( seat ) then
             ply:EnterVehicle( seat )
         end
@@ -286,6 +288,6 @@ end
 -- Restore state if the player was on a Glide vehicle during a Source Engine save or map transition.
 hook.Add( "ClientSignOnStateChanged", "Glide.RestoreVehicle", function( _, _, newState )
     if newState == SIGNONSTATE_FULL then
-        timer.Simple( 1, ResetAll )
+        timer.Simple( 0.2, ResetAll )
     end
 end )

@@ -6,7 +6,6 @@ ENT.PrintName = "Gib"
 
 ENT.Spawnable = false
 ENT.AdminOnly = false
-ENT.VJ_ID_Attackable = true
 
 ENT.PhysgunDisabled = true
 ENT.DoNotDuplicate = true
@@ -74,6 +73,17 @@ function ENT:Initialize()
     else
         self.lifeTime = RealTime() + lifetime
     end
+end
+
+function ENT:SetupCopy( otherEnt )
+
+    self:SetSkin( otherEnt:GetSkin() )
+
+    for i = 0, otherEnt:GetNumBodyGroups() - 1 do
+        self:SetBodygroup( i, otherEnt:GetBodygroup( i ) )
+    end
+
+    self:CopyVelocities( otherEnt )
 end
 
 function ENT:OnRemove()

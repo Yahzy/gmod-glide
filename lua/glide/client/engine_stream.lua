@@ -26,7 +26,7 @@ function Glide.CreateEngineStream( parent )
         -- Internal parameters
         id = id,
         parent = parent,
-        offset = Vector(),
+        offset = Vector( 0, 0, parent:OBBCenter()[3] ),
         layers = {},
 
         wobbleTime = 0,

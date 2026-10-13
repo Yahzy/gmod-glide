@@ -28,5 +28,5 @@ function Glide.CreateExplosion( inflictor, attacker, origin, radius, damage, nor
     net.WriteVector( normal )
     net.Send( targets )
 
-    util.ScreenShake( origin, explosionType == 2 and 0.5 or 5, 0.5, 1.0, 1500, true )
+    util.ScreenShake( origin, 5, 0.5, 1.0, 1500, true )
 end

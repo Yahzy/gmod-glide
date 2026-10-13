@@ -25,7 +25,7 @@ commands[Glide.CMD_UPLOAD_ENGINE_STREAM_PRESET] = function( ply )
     local veh = net.ReadEntity()
 
     if not IsValid( veh ) then return end
-    if not veh.IsGlideVehicle and veh:GetClass() ~= "glide_engine_stream_chip" then return end
+    if not veh.IsGlideVehicle then return end
 
     -- Make sure this player can tool this vehicle
     local tr = ply:GetEyeTrace()
@@ -33,20 +33,8 @@ commands[Glide.CMD_UPLOAD_ENGINE_STREAM_PRESET] = function( ply )
 
     if hook.Run( "CanTool", ply, tr, "glide_engine_stream", {}, 1 ) == false then return end
 
-    local size = net.ReadUInt( 16 )
-
-    if size > Glide.MAX_JSON_SIZE then
-        Glide.Print( "Tried to read data that was too big! (%d/%d)", size, Glide.MAX_JSON_SIZE )
-        return
-    end
-
-    local data = net.ReadData( size )
-
-    data = util.Decompress( data )
-    if not data then return end
-
-    data = Glide.FromJSON( data )
-    if not data then return end
+    local data = Glide.ReadTable()
+    if table.IsEmpty( data ) then return end
 
     Glide.StoreEngineStreamPresetModifier( ply, veh, data )
 end
@@ -63,20 +51,8 @@ commands[Glide.CMD_UPLOAD_MISC_SOUNDS_PRESET] = function( ply )
 
     if hook.Run( "CanTool", ply, tr, "glide_misc_sounds", {}, 1 ) == false then return end
 
-    local size = net.ReadUInt( 16 )
-
-    if size > Glide.MAX_JSON_SIZE then
-        Glide.Print( "Tried to read data that was too big! (%d/%d)", size, Glide.MAX_JSON_SIZE )
-        return
-    end
-
-    local data = net.ReadData( size )
-
-    data = util.Decompress( data )
-    if not data then return end
-
-    data = Glide.FromJSON( data )
-    if not data then return end
+    local data = Glide.ReadTable()
+    if table.IsEmpty( data ) then return end
 
     Glide.StoreMiscSoundsPresetModifier( ply, veh, data )
 end
@@ -101,8 +77,8 @@ local cooldowns = {
     [Glide.CMD_SWITCH_SEATS] = { interval = 0.5, players = {} },
     [Glide.CMD_SET_HEADLIGHTS] = { interval = 0.5, players = {} },
     [Glide.CMD_LAST_AIM_ENTITY] = { interval = 0.01, players = {} },
-    [Glide.CMD_UPLOAD_ENGINE_STREAM_PRESET] = { interval = 0.4, players = {} },
-    [Glide.CMD_UPLOAD_MISC_SOUNDS_PRESET] = { interval = 0.4, players = {} }
+    [Glide.CMD_UPLOAD_ENGINE_STREAM_PRESET] = { interval = 0.9, players = {} },
+    [Glide.CMD_UPLOAD_MISC_SOUNDS_PRESET] = { interval = 0.9, players = {} }
 }
 
 -- Receive and validate network commands
@@ -143,9 +119,22 @@ end )
 
 local type = type
 
+local function ValidateTarget( target )
+    if type( target ) == "table" then
+        for _, ent in ipairs( target ) do
+            if not IsValid( ent ) or not ent:IsPlayer() then
+                return false
+            end
+        end
+
+        return #target > 0
+    end
+
+    return IsValid( target ) and target:IsPlayer()
+end
 --- Apply a camera shake to the target's Glide camera.
 function Glide.SendViewPunch( target, force )
-    if type( target ) == "table" and #target == 0 then return end
+    if not ValidateTarget( target ) then return end
 
     Glide.StartCommand( Glide.CMD_VIEW_PUNCH, false )
     net.WriteFloat( force )

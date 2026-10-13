@@ -8,8 +8,9 @@ ENT.Instructions = "Aim at it, then press USE to enter"
 ENT.AdminOnly = false
 ENT.RenderGroup = RENDERGROUP_BOTH
 
-ENT.VJ_ID_Destructible = true
-ENT.VJ_ID_Vehicle = true
+-- Do not allow copying vehicles with the duplicator/AdvDupe
+ENT.DoNotDuplicate = true
+ENT.DisableDuplicator = true
 
 -- Let Glide know it should handle this entity differently
 ENT.IsGlideVehicle = true
@@ -156,9 +157,11 @@ if CLIENT then
     -- Added to ENT.CameraCenterOffset while a trailer is attached.
     ENT.CameraTrailerOffset = Vector( -150, 0, 10 ) -- Push the camera backwards and a little bit up
 
-    -- Setup how far away players can hear sounds and update misc. features
-    ENT.MaxSoundDistance = 6000
-    ENT.MaxMiscDistance = 3000
+    -- Setup how close players need to be for many client-side features
+    -- (animations, sounds, lights, particles, etc) to become active.
+    -- Also note that, those features will also deactivate
+    -- if the vehicle is not on the player's potential visible set.
+    ENT.MaxFeaturesDistance = 5000
 
     -- Startup/ignition sounds, leave empty to disable
     ENT.StartSound = ""
@@ -244,9 +247,6 @@ end
 if SERVER then
     ENT.Spawnable = true -- Allow it to be spawned serverside
 
-    -- Children classes can choose which NW variables to save
-    ENT.DuplicatorNetworkVariables = {}
-
     -- Setup the vehicle's chassis properties
     ENT.ChassisMass = 700
     ENT.ChassisModel = "models/props_phx/construct/metal_plate1.mdl"
@@ -282,11 +282,17 @@ if SERVER then
     -- Particle size multiplier for collisions
     ENT.CollisionParticleSize = 1
 
+    -- The force that makes this vehicle temporarely float on water.
+    -- Set to 0 to disable the slow water sinking logic.
+    ENT.SlowWaterSinkingBuoyancy = 600
     -- Damage things nearby when the vehicle explodes
     ENT.ExplosionRadius = 500
 
     -- Spawn these gibs when the vehicle explodes
     ENT.ExplosionGibs = {}
+
+    -- Can the vehicle explode?
+    ENT.CanExplode = true
 
     -- Suspension sounds
     ENT.SuspensionHeavySound = "Glide.Suspension.CompressHeavy"
@@ -331,35 +337,6 @@ if SERVER then
         rollForce = 200         -- Roll the vehicle when turning
     }
 
-    -- If Wiremod is installed, this function gets called to add
-    -- inputs/outputs to be created when the vehicle is initialized.
-    -- Children classes can override this function, but they should
-    -- call `BaseClass.SetupWiremodPorts( self, inputs, outputs )` before
-    -- adding their own entries to these inputs/outputs tables.
-    function ENT:SetupWiremodPorts( inputs, outputs )
-        -- Input name, input type, input description
-        inputs[#inputs + 1] = { "EjectDriver", "NORMAL", "When set to 1, kicks the driver out of the vehicle" }
-        inputs[#inputs + 1] = { "LockVehicle", "NORMAL", "When set to 1, only the vehicle creator and friends can enter the vehicle" }
-
-        if self.CanSwitchHeadlights then
-            inputs[#inputs + 1] = { "Headlights", "NORMAL", "0: Off\n1: Low beams\n2: High beams" }
-        end
-
-        if self.CanSwitchTurnSignals then
-            inputs[#inputs + 1] = { "TurnSignal", "NORMAL", "0: Off\n1: Left-turn signal\n2: Right-turn signal\n3: Hazard lights" }
-        end
-
-        -- Output name, output type, output description
-        outputs[#outputs + 1] = { "MaxChassisHealth", "NORMAL", "Max. chassis health" }
-        outputs[#outputs + 1] = { "ChassisHealth", "NORMAL", "Current chassis health (between 0.0 and MaxChassisHealth)" }
-        outputs[#outputs + 1] = { "EngineHealth", "NORMAL", "Current engine health (between 0.0 and 1.0)" }
-        outputs[#outputs + 1] = { "EngineState", "NORMAL", "0: Off\n1: Starting\n2: Running\n3: Shutting down/Ignition cut-off" }
-        outputs[#outputs + 1] = { "Active", "NORMAL", "0: No driver\n1: Has a driver" }
-        outputs[#outputs + 1] = { "Driver", "ENTITY", "The current driver" }
-        outputs[#outputs + 1] = { "DriverSeat", "ENTITY", "The driver seat" }
-        outputs[#outputs + 1] = { "PassengerSeats", "ARRAY", "All other seats" }
-    end
-
     --- Return which input groups should be activated
     --- for a specific seat on this vehicle.
     function ENT:GetInputGroups( _seatIndex )
@@ -372,8 +349,9 @@ if SERVER then
     function ENT:OnDriverEnter() end
     function ENT:OnDriverExit() end
     function ENT:OnSeatInput( _seatIndex, _action, _pressed ) end
+    function ENT:OnHoldInputAction( _action, _data ) end
 
     function ENT:OnPostThink( _dt, _selfTbl ) end
-    function ENT:OnSimulatePhysics( _phys, _dt, _outLin, _outAng ) end
+    function ENT:OnSimulatePhysics( _phys, _dt, _outLin, _outAng, _selfTbl ) end
     function ENT:OnUpdateFeatures( _dt ) end
 end

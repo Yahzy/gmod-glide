@@ -138,10 +138,6 @@ if CLIENT then
     ENT.CameraOffset = Vector( -230, 0, 50 )
     ENT.CameraAngleOffset = Angle( 4, 0, 0 )
 
-    -- Setup how far away players can hear sounds and update misc. features
-    ENT.MaxSoundDistance = 4000
-    ENT.MaxMiscDistance = 5000
-
     -- Sounds
     ENT.StartSound = "Glide.Engine.CarStart"
     ENT.StartTailSound = "Glide.Engine.CarStartTail"
@@ -168,7 +164,7 @@ if CLIENT then
     ENT.BrakeReleaseSound = ""
     ENT.BrakeSqueakSound = ""
 
-    ENT.BrakeLoopSound = ""
+    ENT.BrakeLoopSound = "Glide.BrakeDisk.Car"
     ENT.BrakeLoopVolume = 0.6
 
     -- Exhaust positions
@@ -206,7 +202,7 @@ end
 
 if SERVER then
     ENT.CollisionParticleSize = 0.9
-    ENT.AngularDrag = Vector( -0.5, -0.5, -4 ) -- Roll, pitch, yaw
+    ENT.AngularDrag = Vector( -0.5, -0.5, -3 ) -- Roll, pitch, yaw
 
     -- How long does it take for the vehicle to start up?
     ENT.StartupTime = 0.6
@@ -222,6 +218,9 @@ if SERVER then
 
     -- How fast can the driver spin the vehicle while airborne?
     ENT.AirMaxAngularVelocity = Vector( 150, 200, 150 ) -- Roll, pitch, yaw
+
+    -- Extra suspension sounds
+    ENT.SuspensionLandFromFall = "Glide.OnLand.Car"
 
     --- Returns which inputs applies air control forces.
     --- Should return a roll, pitch and yaw input.
@@ -249,41 +248,4 @@ if SERVER then
     function ENT:GetInputGroups( seatIndex )
         return seatIndex > 1 and { "general_controls" } or { "general_controls", "land_controls" }
     end
-
-    -- Save these network variables when using the duplicator
-    ENT.DuplicatorNetworkVariables = {
-        HeadlightColor = true,
-        TireSmokeColor = true,
-        WheelRadius = true,
-
-        MaxSteerAngle = true,
-        SteerConeChangeRate = true,
-        SteerConeMaxSpeed = true,
-        SteerConeMaxAngle = true,
-        CounterSteer = true,
-
-        BrakePower = true,
-        SuspensionLength = true,
-        SpringStrength = true,
-        SpringDamper = true,
-
-        ForwardTractionMax = true,
-        ForwardTractionBias = true,
-
-        SideTractionMultiplier = true,
-        SideTractionMaxAng = true,
-        SideTractionMin = true,
-        SideTractionMax = true,
-
-        MinRPM = true,
-        MaxRPM = true,
-        MinRPMTorque = true,
-        MaxRPMTorque = true,
-        DifferentialRatio = true,
-        TransmissionEfficiency = true,
-        PowerDistribution = true,
-
-        TurboCharged = true,
-        FastTransmission = true
-    }
 end

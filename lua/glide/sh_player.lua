@@ -1,13 +1,26 @@
 local PlayerMeta = FindMetaTable( "Player" )
 local EntityMeta = FindMetaTable( "Entity" )
-local GetNWEntity = EntityMeta.GetNWEntity
+
+local IsValid = IsValid
+local GetVehicle = PlayerMeta.GetVehicle
+local GetParent = EntityMeta.GetParent
+
+--- Get the Glide vehicle this player is currently in (or `NULL`).
+function PlayerMeta:GlideGetVehicle()
+    local seat = GetVehicle( self )
+    if not IsValid( seat ) then return NULL end
+
+    local parent = GetParent( seat )
+
+    if IsValid( parent ) and parent.IsGlideVehicle then
+        return parent
+    end
+
+    return NULL
+end
 
 do
     local GetNWInt = EntityMeta.GetNWInt
-
-    function PlayerMeta:GlideGetVehicle()
-        return GetNWEntity( self, "GlideVehicle", NULL )
-    end
 
     function PlayerMeta:GlideGetSeatIndex()
         return GetNWInt( self, "GlideSeatIndex", 0 )
@@ -27,6 +40,24 @@ if SERVER then
     --- replaced by Player:GlideGetAimAngles.
     function PlayerMeta:GlideGetCameraAngles()
         return self.GlideCameraAngles or Angle()
+    end
+
+    do
+        Glide._OriginalEnterVehicle = Glide._OriginalEnterVehicle or PlayerMeta.EnterVehicle
+        local EnterVehicle = Glide._OriginalEnterVehicle
+
+        function PlayerMeta:EnterVehicle( vehicle )
+            if IsValid( vehicle ) and vehicle.IsGlideVehicle and isfunction( vehicle.GetFreeSeat ) then
+                local seat = vehicle:GetFreeSeat()
+                if not IsValid( seat ) then
+                    return
+                end
+
+                return EnterVehicle( self, seat )
+            end
+
+            return EnterVehicle( self, vehicle )
+        end
     end
 
     --- Utility function to get the entity creator
@@ -78,7 +109,7 @@ if SERVER then
     local EntEyePos = EntityMeta.EyePos
 
     hook.Add( "SetupMove", "Glide.CacheCameraLocation", function( ply, _, cmd )
-        local vehicle = GetNWEntity( ply, "GlideVehicle", NULL )
+        local vehicle = ply:GlideGetVehicle()
         if not IsValid( vehicle ) then return end
 
         local angles = cmd:GetViewAngles()

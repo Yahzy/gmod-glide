@@ -36,6 +36,10 @@ function Glide.CreateExplosion( pos, normal )
         eff:SetFlags( 2 )
         eff:SetNormal( normal )
         Effect( "WaterSplash", eff, true, true )
+
+    elseif isFirework then
+        PlaySoundSet( "Glide.Explosion.FireworkSparks", pos, volume )
+
     else
         local eff = EffectData()
         eff:SetOrigin( pos )

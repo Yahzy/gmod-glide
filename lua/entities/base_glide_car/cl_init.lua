@@ -44,7 +44,20 @@ function ENT:OnTurnOff()
         Glide.PlaySoundSet( self.StoppedSound, self, GetVolume( "carVolume" ), nil, 85 )
     end
 
-    self:DeactivateSounds()
+    if self.stream then
+        self.stream:Destroy()
+        self.stream = nil
+    end
+
+    -- Remove all sounds except horns/sirens
+    local sounds = self.sounds
+
+    for k, snd in pairs( sounds ) do
+        if k ~= "horn" and k ~= "siren" then
+            snd:Stop()
+            sounds[k] = nil
+        end
+    end
 end
 
 --- Implement this base class function.
@@ -72,7 +85,7 @@ function ENT:UpdateTurboSound( sounds, dt )
     local inertia = ExpDecay( lastInertia, self:GetEngineThrottle(), 1, dt )
 
     if inertia < lastInertia and inertia > 0.6 and self.rpmFraction > 0.5 and self.TurboBlowoffSound ~= "" then
-        self:EmitSound( self.TurboBlowoffSound, 80, math.random( 100, 110 ), self.TurboBlowoffVolume * inertia )
+        Glide.PlaySoundSet( self.TurboBlowoffSound, self, self.TurboBlowoffVolume * inertia * GetVolume( "carVolume" ) )
         inertia = 0
     end
 
@@ -86,7 +99,7 @@ function ENT:UpdateTurboSound( sounds, dt )
             sounds.turbo:ChangePitch( pitch )
 
         elseif self.TurboLoopSound ~= "" then
-            local snd = self:CreateLoopingSound( "turbo", self.TurboLoopSound, 80, self )
+            local snd = self:CreateLoopingSound( "turbo", Glide.GetRandomSound( self.TurboLoopSound ), 80, self )
             snd:PlayEx( volume, pitch )
         end
 
@@ -109,13 +122,14 @@ function ENT:OnUpdateSounds()
     local isSirenEnabled = self.lastSirenEnableTime and CurTime() - self.lastSirenEnableTime > 0.25
     local isHonking = self:GetIsHonking()
 
-    if isHonking and self.HornSound then
+    if isHonking and self.HornSound and self.HornSound ~= "" then
         local volume = GetVolume( "hornVolume" ) * ( isSirenEnabled and self.SirenVolume or 1 )
 
         if sounds.horn then
             sounds.horn:ChangeVolume( volume )
         else
-            local snd = self:CreateLoopingSound( "horn", isSirenEnabled and self.SirenLoopAltSound or self.HornSound, 85, self )
+            local snd = self:CreateLoopingSound( "horn", Glide.GetRandomSound(
+                isSirenEnabled and self.SirenLoopAltSound or self.HornSound ), 85, self )
             snd:PlayEx( volume, 100 )
         end
 
@@ -132,7 +146,7 @@ function ENT:OnUpdateSounds()
         if sounds.siren then
             sounds.siren:ChangeVolume( self.SirenVolume * GetVolume( "hornVolume" ) )
         else
-            local snd = self:CreateLoopingSound( "siren", self.SirenLoopSound, 90, self )
+            local snd = self:CreateLoopingSound( "siren", Glide.GetRandomSound( self.SirenLoopSound ), 90, self )
             snd:PlayEx( self.SirenVolume * GetVolume( "hornVolume" ), 100 )
         end
 
@@ -162,8 +176,8 @@ function ENT:OnUpdateSounds()
         if sounds.brakeLoop then
             sounds.brakeLoop:ChangeVolume( ( self.fastBrakePressure - 0.1 ) * self.BrakeLoopVolume * brake )
 
-        elseif self.BrakeLoopSound ~= "" then
-            local snd = self:CreateLoopingSound( "brakeLoop", self.BrakeLoopSound, 80, self )
+        elseif self.BrakeLoopSound and self.BrakeLoopSound ~= "" then
+            local snd = self:CreateLoopingSound( "brakeLoop", Glide.GetRandomSound( self.BrakeLoopSound ), 80, self )
             snd:PlayEx( 0.0, 100 )
         end
 
@@ -233,7 +247,7 @@ function ENT:OnUpdateSounds()
     inputs.rpmFraction = self.rpmFraction or 0
     inputs.throttle = Pow( engineThrottle, 0.6 )
 
-    local isRedlining = self:GetIsRedlining() and inputs.throttle > 0.9
+    local isRedlining = self:GetIsRedlining() and inputs.throttle > 0.9 and inputs.rpmFraction > 0.9
 
     if isRedlining ~= stream.isRedlining then
         stream.isRedlining = isRedlining
@@ -281,29 +295,29 @@ local DEFAULT_SIREN_COLOR = Color( 255, 255, 255, 255 )
 --- Implement this base class function.
 function ENT:OnUpdateMisc()
     local dt = FrameTime()
-    local rpmFraction = ( self:GetEngineRPM() - self:GetMinRPM() ) / ( self:GetMaxRPM() - self:GetMinRPM() )
+    local selfTbl = self:GetTable()
+    local rpmFraction = ( selfTbl.GetEngineRPM( self ) - selfTbl.GetMinRPM( self ) ) / ( selfTbl.GetMaxRPM( self ) - selfTbl.GetMinRPM( self ) )
 
-    self.rpmFraction = ExpDecay( self.rpmFraction, rpmFraction, rpmFraction > self.rpmFraction and 7 or 4, dt )
+    selfTbl.rpmFraction = ExpDecay( selfTbl.rpmFraction, rpmFraction, rpmFraction > selfTbl.rpmFraction and 7 or 4, dt )
 
     -- Siren lights/bodygroups
-    local siren = self:GetSirenState()
+    local siren = selfTbl.GetSirenState( self )
 
-    if self.lastSirenState ~= siren then
-        self.lastSirenState = siren
+    if selfTbl.lastSirenState ~= siren then
+        selfTbl.lastSirenState = siren
 
         if siren > 1 then
-            self.lastSirenEnableTime = CurTime()
-
-        elseif self.lastSirenEnableTime then
-            if CurTime() - self.lastSirenEnableTime < 0.25 then
-                Glide.PlaySoundSet( self.SirenInterruptSound, self, self.SirenVolume )
+            selfTbl.lastSirenEnableTime = CurTime()
+        elseif selfTbl.lastSirenEnableTime then
+            if CurTime() - selfTbl.lastSirenEnableTime < 0.25 then
+                Glide.PlaySoundSet( selfTbl.SirenInterruptSound, self, selfTbl.SirenVolume )
             end
 
-            self.lastSirenEnableTime = nil
+            selfTbl.lastSirenEnableTime = nil
         end
 
         -- Set bodygroups to default
-        for _, v in ipairs( self.SirenLights ) do
+        for _, v in ipairs( selfTbl.SirenLights ) do
             if v.bodygroup then
                 self:SetBodygroup( v.bodygroup, 0 )
             end
@@ -313,12 +327,12 @@ function ENT:OnUpdateMisc()
     if siren < 1 then return end
 
     local myPos = self:GetPos()
-    local t = ( CurTime() % self.SirenCycle ) / self.SirenCycle
+    local t = ( CurTime() % selfTbl.SirenCycle ) / selfTbl.SirenCycle
     local on, pos, dir, radius
 
     local bodygroupState = {}
 
-    for _, v in ipairs( self.SirenLights ) do
+    for _, v in ipairs( selfTbl.SirenLights ) do
         on = t > v.time and t < v.time + ( v.duration or 0.125 )
 
         -- Check for optional bodygroup requirement

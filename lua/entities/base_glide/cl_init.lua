@@ -14,37 +14,27 @@ function ENT:OnReloaded()
 end
 
 function ENT:Initialize()
-    self.isLazyThink = false
+    self.shouldThinkNow = false
     self.lazyThinkCD = 0
 
     self.sounds = {}
-    self.waterSideSlide = 0
+    self.isSoundActive = false
     self.isLocalPlayerInFirstPerson = false
     self.isLocalPlayerInVehicle = false
+    self.waterSideSlide = 0
 
-    -- Create a RangedFeature to handle engine sounds
-    self.rfSounds = Glide.CreateRangedFeature( self, self.MaxSoundDistance )
-    self.rfSounds:SetTestCallback( "ShouldActivateSounds" )
-    self.rfSounds:SetActivateCallback( "ActivateSounds" )
-    self.rfSounds:SetDeactivateCallback( "DeactivateSounds" )
-    self.rfSounds:SetUpdateCallback( "UpdateSounds" )
-
-    -- Create a RangedFeature to handle misc. features, such as particles and animations
-    self.rfMisc = Glide.CreateRangedFeature( self, self.MaxMiscDistance )
-    self.rfMisc:SetActivateCallback( "ActivateMisc" )
-    self.rfMisc:SetDeactivateCallback( "DeactivateMisc" )
-    self.rfMisc:SetUpdateCallback( "UpdateMisc" )
+    -- Create a RangedFeature to handle automatic creation/destruction of
+    -- features like sounds, lights, particles and animations.
+    self.rfMisc = Glide.CreateRangedFeature( self, self.MaxFeaturesDistance )
+    self.rfMisc:SetActivateCallback( "InternalActivateFeatures" )
+    self.rfMisc:SetDeactivateCallback( "InternalDeactivateFeatures" )
+    self.rfMisc:SetUpdateCallback( "InternalUpdateFeatures" )
 
     self:OnPostInitialize()
 end
 
 function ENT:OnRemove( fullUpdate )
     if fullUpdate then return end
-
-    if self.rfSounds then
-        self.rfSounds:Destroy()
-        self.rfSounds = nil
-    end
 
     if self.rfMisc then
         self.rfMisc:Destroy()
@@ -55,7 +45,7 @@ end
 function ENT:OnEngineStateChange( _, lastState, state )
     if state == 1 then
         -- If we have a "startup" sound, play it now.
-        if self.rfSounds and self.rfSounds.isActive and self.StartSound and self.StartSound ~= "" then
+        if self.rfMisc and self.rfMisc.isActive and self.StartSound and self.StartSound ~= "" then
             local snd = self:CreateLoopingSound( "start", Glide.GetRandomSound( self.StartSound ), 70, self )
             snd:PlayEx( 1, 100 )
         end
@@ -71,98 +61,44 @@ end
 local IsValid = IsValid
 
 function ENT:GetWheelSpin( index )
-    local wheel = self.wheels and self.wheels[index]
+    local wheels = self.wheels
 
-    if IsValid( wheel ) and wheel.GetLastSpin then
-        return wheel:GetLastSpin()
+    if wheels then
+        local wheel = wheels[index]
+
+        if IsValid( wheel ) then
+            local GetLastSpin = wheel.GetLastSpin
+
+            if GetLastSpin then
+                return GetLastSpin( wheel )
+            end
+        end
     end
 
     return 0
 end
 
 function ENT:GetWheelOffset( index )
-    local wheel = self.wheels and self.wheels[index]
+    local wheels = self.wheels
 
-    if IsValid( wheel ) and wheel.GetBaseZPos then
-        return wheel:GetLocalPos()[3] - wheel:GetBaseZPos()
+    if wheels then
+        local wheel = wheels[index]
+
+        if IsValid( wheel ) then
+            local GetBaseZPos = wheel.GetBaseZPos
+
+            if GetBaseZPos then
+                return wheel:GetLocalPos()[3] - GetBaseZPos( wheel )
+            end
+        end
     end
 
     return 0
 end
 
---- Create a new looping sound and store it on the slot `id`.
---- This sound will automatically be stopped when the
---- `rfSounds` RangedFeature is deactivated.
-function ENT:CreateLoopingSound( id, path, level, parent )
-    local snd = self.sounds[id]
-
-    if not snd then
-        snd = CreateSound( parent or self, path )
-        snd:SetSoundLevel( level )
-        self.sounds[id] = snd
-    end
-
-    return snd
-end
-
-function ENT:ActivateSounds()
-    self.waterSideSlide = 0
-
-    -- Let children classes do their own thing
-    self:OnActivateSounds()
-end
-
-function ENT:DeactivateSounds()
-    -- Remove all sounds we've created so far
-    local sounds = self.sounds
-
-    for k, snd in pairs( sounds ) do
-        snd:Stop()
-        sounds[k] = nil
-    end
-
-    -- Let children classes cleanup their own sounds
-    self:OnDeactivateSounds()
-end
-
-function ENT:UpdateSounds()
-    if not self.isLazyThink then
-        local signal = self:GetTurnSignalState()
-
-        if signal > 0 and self.TurnSignalVolume > 0 then
-            local signalBlink = ( CurTime() % self.TurnSignalCycle ) > self.TurnSignalCycle * 0.5
-
-            if self.lastSignalBlink ~= signalBlink then
-                self.lastSignalBlink = signalBlink
-
-                if signalBlink and self.TurnSignalTickOnSound ~= "" then
-                    self:EmitSound( self.TurnSignalTickOnSound, 65, self.TurnSignalPitch, self.TurnSignalVolume )
-
-                elseif not signalBlink and self.TurnSignalTickOffSound ~= "" then
-                    self:EmitSound( self.TurnSignalTickOffSound, 65, self.TurnSignalPitch, self.TurnSignalVolume )
-                end
-            end
-        end
-
-        local sounds = self.sounds
-
-        if sounds.start and self:GetEngineState() ~= 1 then
-            sounds.start:Stop()
-            sounds.start = nil
-
-            if self.StartTailSound and self.StartTailSound ~= "" then
-                Glide.PlaySoundSet( self.StartTailSound, self )
-            end
-        end
-    end
-
-    -- Let children classes handle their own sounds
-    self:OnUpdateSounds()
-end
-
 local EntityPairs = Glide.EntityPairs
 
-function ENT:ActivateMisc()
+function ENT:InternalActivateFeatures()
     -- Find and store the wheel and seat entities we have
     local wheels = {}
     local seats = {}
@@ -196,13 +132,15 @@ function ENT:ActivateMisc()
     end
 end
 
-function ENT:DeactivateMisc()
+function ENT:InternalDeactivateFeatures()
     if self.wheels then
         for _, w in EntityPairs( self.wheels ) do
             w:CleanupSounds()
         end
     end
 
+    -- Manually remove the engine fire sound since it
+    -- is not created with ENT:CreateLoopingSound
     if self.engineFireSound then
         self.engineFireSound:Stop()
         self.engineFireSound = nil
@@ -212,32 +150,63 @@ function ENT:DeactivateMisc()
     self.seats = nil
     self.lastNick = nil
     self:RemoveHeadlights()
+    self:InternalDeactivateSounds()
 
     -- Let children classes cleanup their own stuff
     self:OnDeactivateMisc()
 end
 
+--- Create a new looping sound and store it on the slot `id`.
+---
+--- This sound will be automatically removed when the `rfMisc`
+--- RangedFeature is deactivated, or when `ENT:ShouldActivateSounds` returns `false`.
+function ENT:CreateLoopingSound( id, path, level, parent )
+    local snd = self.sounds[id]
+
+    if not snd then
+        snd = CreateSound( parent or self, path )
+        snd:SetSoundLevel( level )
+        self.sounds[id] = snd
+    end
+
+    return snd
+end
+
+function ENT:InternalDeactivateSounds()
+    self.isSoundActive = false
+
+    -- Remove all sounds we've created so far
+    local sounds = self.sounds
+
+    for k, snd in pairs( sounds ) do
+        snd:Stop()
+        sounds[k] = nil
+    end
+
+    -- Let children classes do their own thing
+    self:OnDeactivateSounds()
+end
+
 local RealTime = RealTime
 local Effect = util.Effect
-local IsGameUIVisible = gui.IsGameUIVisible
+local GetTable = FindMetaTable( "Entity" ).GetTable
 
 local DEFAULT_FLAME_ANGLE = Angle()
-local IS_SINGLEPLAYER = game.SinglePlayer()
 
-function ENT:UpdateMisc()
+function ENT:InternalUpdateFeatures()
     local t = RealTime()
-    local dontDoParticles = IS_SINGLEPLAYER and IsGameUIVisible()
+    local selfTbl = GetTable( self )
 
     -- Keep particles consistent even at high FPS
-    if t > self.particleCD and self:WaterLevel() < 3 and not dontDoParticles then
-        self.particleCD = t + 0.03
-        self:OnUpdateParticles()
+    if t > selfTbl.particleCD and self:WaterLevel() < 3 then
+        selfTbl.particleCD = t + 0.03
+        selfTbl.OnUpdateParticles( self )
 
-        if self:GetIsEngineOnFire() then
+        if selfTbl.GetIsEngineOnFire( self ) then
             local velocity = self:GetVelocity()
             local eff = EffectData()
 
-            for _, v in ipairs( self.EngineFireOffsets ) do
+            for _, v in ipairs( selfTbl.EngineFireOffsets ) do
                 eff:SetStart( velocity )
                 eff:SetOrigin( self:LocalToWorld( v.offset ) )
                 eff:SetAngles( self:LocalToWorldAngles( v.angle or DEFAULT_FLAME_ANGLE ) )
@@ -247,25 +216,68 @@ function ENT:UpdateMisc()
         end
     end
 
-    -- Engine fire sound
-    if self:GetIsEngineOnFire() then
-        if not self.engineFireSound then
-            self.engineFireSound = CreateSound( self, "glide/fire/fire_loop_1.wav" )
-            self.engineFireSound:SetSoundLevel( 80 )
-            self.engineFireSound:PlayEx( 0.9, 100 )
+    -- Manually manage the engine fire sound instead of using ENT:CreateLoopingSound
+    if selfTbl.GetIsEngineOnFire( self ) then
+        if not selfTbl.engineFireSound then
+            selfTbl.engineFireSound = CreateSound( self, "glide/fire/fire_loop_1.wav" )
+            selfTbl.engineFireSound:SetSoundLevel( 80 )
+            selfTbl.engineFireSound:PlayEx( 0.9, 100 )
+        end
+    elseif selfTbl.engineFireSound then
+        selfTbl.engineFireSound:Stop()
+        selfTbl.engineFireSound = nil
+    end
+
+    if selfTbl.shouldThinkNow then
+        local isSoundActive = selfTbl.ShouldActivateSounds( self )
+
+        if isSoundActive then
+            if not selfTbl.isSoundActive then
+                selfTbl.isSoundActive = true
+                selfTbl.OnActivateSounds( self )
+            end
+
+            -- Let children classes do their own thing
+            selfTbl.OnUpdateSounds( self )
+        elseif selfTbl.isSoundActive then
+            selfTbl.InternalDeactivateSounds( self )
         end
 
-    elseif self.engineFireSound then
-        self.engineFireSound:Stop()
-        self.engineFireSound = nil
+        local signal = selfTbl.GetTurnSignalState( self )
+
+        if signal > 0 and selfTbl.TurnSignalVolume > 0 then
+            local signalBlink = ( CurTime() % selfTbl.TurnSignalCycle ) > selfTbl.TurnSignalCycle * 0.5
+
+            if selfTbl.lastSignalBlink ~= signalBlink then
+                selfTbl.lastSignalBlink = signalBlink
+
+                if signalBlink and selfTbl.TurnSignalTickOnSound ~= "" then
+                    self:EmitSound( selfTbl.TurnSignalTickOnSound, 65, selfTbl.TurnSignalPitch, selfTbl.TurnSignalVolume )
+
+                elseif not signalBlink and selfTbl.TurnSignalTickOffSound ~= "" then
+                    self:EmitSound( selfTbl.TurnSignalTickOffSound, 65, selfTbl.TurnSignalPitch, selfTbl.TurnSignalVolume )
+                end
+            end
+        end
+
+        local sounds = selfTbl.sounds
+
+        if sounds.start and selfTbl.GetEngineState( self ) ~= 1 then
+            sounds.start:Stop()
+            sounds.start = nil
+
+            if selfTbl.StartTailSound and selfTbl.StartTailSound ~= "" then
+                Glide.PlaySoundSet( selfTbl.StartTailSound, self )
+            end
+        end
     end
 
     -- Update lights and sprites
-    self:UpdateLights()
+    selfTbl.UpdateLights( self, selfTbl )
 
-    -- Let children classes do their own stuff
-    self:OnUpdateMisc()
-    self:OnUpdateAnimations()
+    -- Let children classes do their own thing
+    selfTbl.OnUpdateMisc( self )
+    selfTbl.OnUpdateAnimations( self )
 end
 
 function ENT:Think()
@@ -274,21 +286,21 @@ function ENT:Think()
     -- Run some things less frequently when the
     -- local player is not inside this vehicle.
     local t = RealTime()
-    local isLazy = not self.isLocalPlayerInVehicle
+    local selfTbl = GetTable( self )
+    local shouldThinkNow = true
 
-    if isLazy and t > self.lazyThinkCD then
-        isLazy = false
-        self.lazyThinkCD = t + 0.05
+    if not selfTbl.isLocalPlayerInVehicle then
+        shouldThinkNow = t > selfTbl.lazyThinkCD
+
+        if shouldThinkNow then
+            selfTbl.lazyThinkCD = t + 0.05
+        end
     end
 
-    self.isLazyThink = isLazy
+    selfTbl.shouldThinkNow = shouldThinkNow
 
-    if self.rfSounds then
-        self.rfSounds:Think()
-    end
-
-    if self.rfMisc then
-        self.rfMisc:Think()
+    if selfTbl.rfMisc then
+        selfTbl.rfMisc:Think()
     end
 
     return true

@@ -2,7 +2,10 @@ function ENT:Repair()
     self:SetIsEngineOnFire( false )
     self:SetChassisHealth( self.MaxChassisHealth )
     self:SetEngineHealth( 1.0 )
-    self:UpdateHealthOutputs()
+
+    for _, w in Glide.EntityPairs( self.wheels ) do
+        w:Repair()
+    end
 end
 
 function ENT:Explode( attacker, inflictor )
@@ -35,14 +38,14 @@ function ENT:Explode( attacker, inflictor )
         local vehPos = self:GetPos()
 
         for _, w in Glide.EntityPairs( self.wheels ) do
-            if IsValid( w ) and not w:GetNoDraw() then
+            if IsValid( w ) and not w:GetNoDraw() and not w.GlideIsHidden then
                 local gibPos = w:GetPos()
                 local gib = ents.Create( "glide_gib" )
                 gib:SetPos( gibPos )
                 gib:SetAngles( w:GetAngles() )
                 gib:SetModel( w:GetModel() )
                 gib:Spawn()
-                gib:CopyVelocities( self )
+                gib:SetupCopy( self )
 
                 SetEntityCreator( gib, creator )
 
@@ -64,14 +67,10 @@ function ENT:Explode( attacker, inflictor )
         gib:SetAngles( self:GetAngles() )
         gib:SetModel( self:GetModel() )
         gib:Spawn()
-        gib:CopyVelocities( self )
+        gib:SetupCopy( self )
         gib:SetOnFire()
 
         SetEntityCreator( gib, creator )
-
-        for _, v in ipairs( gib:GetBodyGroups() ) do
-            gib:SetBodygroup( v.id, 1 )
-        end
     else
         -- Spawn gibs given by the `ExplosionGibs` table
         for k, v in ipairs( self.ExplosionGibs ) do
@@ -80,7 +79,7 @@ function ENT:Explode( attacker, inflictor )
             gib:SetAngles( self:GetAngles() )
             gib:SetModel( v )
             gib:Spawn()
-            gib:CopyVelocities( self )
+            gib:SetupCopy( self )
 
             SetEntityCreator( gib, creator )
 
@@ -114,7 +113,7 @@ function ENT:OnTakeDamage( dmginfo )
 
         local phys = self:GetPhysicsObject()
 
-        if IsValid( phys ) then
+        if self.hasValidPhysics then
             local damagePos = dmginfo:GetDamagePosition()
             local damageForce = dmginfo:GetDamageForce() * phys:GetMass() * self.BlastForceMultiplier
 
@@ -125,11 +124,10 @@ function ENT:OnTakeDamage( dmginfo )
         amount = amount * self.BulletDamageMultiplier * cvarBullet:GetFloat()
     end
 
-    health = health - amount
+    health = math.max( 0, health - amount )
 
     self:SetChassisHealth( health )
     self:TakeEngineDamage( ( amount / self.MaxChassisHealth ) * self.EngineDamageMultiplier )
-    self:UpdateHealthOutputs()
 
     self.lastDamageAttacker = dmginfo:GetAttacker()
     self.lastDamageInflictor = dmginfo:GetInflictor()
@@ -138,7 +136,7 @@ function ENT:OnTakeDamage( dmginfo )
         self:SetIsEngineOnFire( true )
     end
 
-    if health < 1 then
+    if health < 1 and self.CanExplode then
         self:Explode( self.lastDamageAttacker, self.lastDamageInflictor )
     end
 end
@@ -153,6 +151,8 @@ local PlaySoundSet = Glide.PlaySoundSet
 
 local cvarCollision = GetConVar( "glide_physics_damage_multiplier" )
 local cvarWorldCollision = GetConVar( "glide_world_physics_damage_multiplier" )
+local cvarEnablePlayerCollisionDamage = GetConVar( "glide_enable_damage_player_on_collision" )
+local cvarPlayerCollisionDamageMult = GetConVar( "glide_player_collision_damage_multiplier" )
 
 function ENT:PhysicsCollide( data )
     if isfunction(self.UVPhysicsCollide) then
@@ -186,6 +186,7 @@ function ENT:PhysicsCollide( data )
     eff:SetOrigin( data.HitPos )
     eff:SetScale( math.min( speed * 0.02, 6 ) * self.CollisionParticleSize )
     eff:SetNormal( surfaceNormal )
+    eff:SetColor( 255 )
     util.Effect( "glide_metal_impact", eff )
 
     local isHardHit = speed > 300
@@ -222,5 +223,25 @@ function ENT:PhysicsCollide( data )
         dmg:SetDamageType( 1 ) -- DMG_CRUSH
         dmg:SetDamagePosition( data.HitPos )
         self:TakeDamageInfo( dmg )
+
+        if not cvarEnablePlayerCollisionDamage:GetBool() then return end
+
+        local playerDamage = damage * cvarPlayerCollisionDamageMult:GetFloat()
+        if playerDamage < 1 then return end
+
+        local attacker = IsValid( ent ) and ent or game.GetWorld()
+
+        for _, seat in Glide.EntityPairs( self.seats ) do
+            local ply = seat:GetDriver()
+
+            if IsValid( ply ) then
+                local dmgPlayer = DamageInfo()
+                dmgPlayer:SetAttacker( attacker )
+                dmgPlayer:SetInflictor( self )
+                dmgPlayer:SetDamage( playerDamage )
+                dmgPlayer:SetDamageType( DMG_VEHICLE )
+                ply:TakeDamageInfo( dmgPlayer )
+            end
+        end
     end
 end

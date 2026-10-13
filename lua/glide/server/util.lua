@@ -1,5 +1,4 @@
 do
-    -- Code provided by Wiremod.
     local minForce, maxForce = -400000000, 400000000
 
     -- Timer resolves issue with table not existing until next tick on Linux.
@@ -18,89 +17,14 @@ do
     end )
 
     local Clamp = math.Clamp
+    local VectorUnpack = FindMetaTable( "Vector" ).Unpack
+    local VectorSetUnpacked = FindMetaTable( "Vector" ).SetUnpacked
 
     --- Ensures that the force is within the range
     --- of a float, to prevent physics engine crashes.
     function Glide.ClampForce( v )
-        v[1] = Clamp( v[1], minForce, maxForce )
-        v[2] = Clamp( v[2], minForce, maxForce )
-        v[3] = Clamp( v[3], minForce, maxForce )
-    end
-end
-
-do
-    -- Filter entity duplication data
-    local REQUIRED_KEYS = {
-        ["DT"] = true,
-        ["Pos"] = true,
-        ["Angle"] = true,
-        ["Mins"] = true,
-        ["Maxs"] = true,
-        ["Base"] = true,
-        ["Class"] = true,
-        ["BaseClass"] = true,
-        ["PhysicsObjects"] = true,
-        ["Model"] = true,
-        ["EntityMods"] = true, -- Entity modifiers (colors, materials, etc.)
-        ["BuildDupeInfo"] = true -- Required for parenting to work
-    }
-
-    function Glide.FilterEntityCopyTable( data, nwFields, entFields )
-        nwFields = nwFields or {}
-        entFields = entFields or {}
-
-        for k, v in pairs( data ) do
-            if k == "DT" then
-                for name, _ in pairs( v ) do
-                    if not nwFields[name] then
-                        v[name] = nil -- We do not want to save this
-                    end
-                end
-
-            elseif not REQUIRED_KEYS[k] and not entFields[k] then
-                data[k] = nil -- We do not want to save this
-            end
-        end
-    end
-
-    -- Save Wiremod dupe data, when available
-    function Glide.PreEntityCopy( ent )
-        duplicator.ClearEntityModifier( ent, "WireDupeInfo" )
-
-        if not WireLib then return end
-
-        local info = WireLib.BuildDupeInfo( ent )
-
-        if info then
-            duplicator.StoreEntityModifier( ent, "WireDupeInfo", info )
-        end
-    end
-
-    local function EntityLookup( createdEntities )
-        return function( id, default )
-            if id == nil then return default end
-            if id == 0 then return game.GetWorld() end
-
-            local ent = createdEntities[id]
-            if IsValid( ent ) then
-                return ent
-            else
-                return default
-            end
-        end
-    end
-
-    -- Restore Wiremod dupe data, when available
-    function Glide.PostEntityPaste( ply, ent, createdEntities )
-        if not WireLib then return end
-
-        local mods = ent.EntityMods
-        if not mods then return end
-
-        local info = mods.WireDupeInfo
-        if type( info ) ~= "table" then return end
-
-        WireLib.ApplyDupeInfo( ply, ent, info, EntityLookup( createdEntities ) )
+        local x, y, z = VectorUnpack( v )
+        VectorSetUnpacked( v, Clamp( x, minForce, maxForce ), Clamp( y, minForce, maxForce ), Clamp( z, minForce, maxForce ) )
     end
 end
 
@@ -116,29 +40,10 @@ do
     end
 end
 
--- Find and register all entities that are children of `base_glide`
--- (or any of it's children classes) on the duplicator/entity limit system.
--- Also make them spawnable on Starfall.
-hook.Add( "InitPostEntity", "Glide.RegisterEntityClasses", function()
-    local IsBasedOn = scripted_ents.IsBasedOn
-    local RegisterEntityClass = duplicator.RegisterEntityClass
-
-    local isStarfallAvailable = SF ~= nil
-    local starfallData = { {} }
-
-    for class, _ in pairs( scripted_ents.GetList() ) do
-        if IsBasedOn( class, "base_glide" ) then
-            RegisterEntityClass( class, Glide.VehicleFactory, "Data" )
-
-            if isStarfallAvailable then
-                list.Set( "starfall_creatable_sent", class, starfallData )
-            end
-        end
-    end
-end )
-
 -- Call a hook when a player finishes loading into the server
 -- and is ready to receive network events.
+local Player = Player
+
 hook.Add( "ClientSignOnStateChanged", "Glide.TriggerOnPlayerLoad", function( user, _, new )
     if new ~= SIGNONSTATE_FULL then return end
 
@@ -156,17 +61,19 @@ end )
 
 local IsValid = IsValid
 
-function Glide.CanSpawnVehicle( ply )
-    if hook.Run( "Glide_CanSpawnVehicle", ply ) == false then return false end
-
+function Glide.CanSpawnVehicle( ply, class )
     if not IsValid( ply ) then return false end
     if not ply:CheckLimit( "glide_vehicles" ) then return false end
+
+    if hook.Run( "Glide_CanSpawnVehicle", ply, class ) == false then
+        return false
+    end
 
     return true
 end
 
 function Glide.VehicleFactory( ply, data )
-    if not Glide.CanSpawnVehicle( ply ) then return end
+    if not Glide.CanSpawnVehicle( ply, data.Class ) then return end
 
     local ent = ents.Create( data.Class )
     if not IsValid( ent ) then return end
@@ -211,12 +118,27 @@ function Glide.CanLockVehicle( ply, vehicle )
     return hook.Run( "Glide_CanLockVehicle", ply, vehicle ) or false
 end
 
+local cvarAlwaysEnterLocked = GetConVar( "glide_always_can_enter_locked_vehicles" )
+
 --- Check if a player can enter a locked vehicle.
 function Glide.CanEnterLockedVehicle( ply, vehicle )
     local canEnter = hook.Run( "Glide_CanEnterLockedVehicle", ply, vehicle )
-    if not canEnter or canEnter == nil then return false end
+    if canEnter == false then return false end
+
+    if cvarAlwaysEnterLocked:GetBool() then return true end
+    if not canEnter then return false end
 
     return Glide.CanLockVehicle( ply, vehicle )
+end
+
+local cvarAllowPlayerWeaponsInVehicle = GetConVar( "glide_allow_player_weapons_in_vehicle" )
+
+function Glide.EnterVehicleSeat( ply, vehicle, seat )
+    if not IsValid( vehicle ) or not IsValid( seat ) then return end
+    if not seat.GlideSeatIndex then return end
+
+    ply:SetAllowWeaponsInVehicle( cvarAllowPlayerWeaponsInVehicle:GetBool() )
+    ply:EnterVehicle( seat )
 end
 
 --- Make a player switch to another seat
@@ -230,6 +152,7 @@ function Glide.SwitchSeat( ply, seatIndex )
     if not IsValid( vehicle ) then return end
 
     local seat = vehicle.seats[seatIndex]
+
     if not IsValid( seat ) then
         ply:EmitSound( "player/suit_denydevice.wav", 50, 100, 1.0, 6, 0, 0 )
         return
@@ -241,8 +164,7 @@ function Glide.SwitchSeat( ply, seatIndex )
     end
 
     ply:ExitVehicle()
-    ply:SetAllowWeaponsInVehicle( false )
-    ply:EnterVehicle( seat )
+    Glide.EnterVehicleSeat( ply, vehicle, seat )
 
     hook.Run( "Glide_PostSwitchSeat", ply, seatIndex )
 end
@@ -253,7 +175,7 @@ function Glide.GetNearbyPlayers( pos, radius )
 
     local found, count = {}, 0
 
-    for _, ply in ipairs( player.GetHumans() ) do
+    for _, ply in player.Iterator() do
         local dist = pos:DistToSqr( ply:GetPos() )
 
         if dist < radius then
@@ -263,4 +185,65 @@ function Glide.GetNearbyPlayers( pos, radius )
     end
 
     return found, count
+end
+
+-- Utility function used by the Repair SWEPs, to restore
+-- chassis/engine health either partially or completely, and
+-- to recreate parts and run extra functions when completely repaired.
+function Glide.PartialRepair( vehicle, chassisAmount, engineAmount )
+    local engineHealth = vehicle:GetEngineHealth()
+    local chassisHealth = vehicle:GetChassisHealth()
+
+    -- If the vehicle is at max. chassis and engine health...
+    if chassisHealth >= vehicle.MaxChassisHealth and engineHealth >= 1 then
+        local hasRepairedWheels = false
+
+        if vehicle.wheels then
+            -- Fix any blown wheels
+            for _, wheel in Glide.EntityPairs( vehicle.wheels ) do
+                if wheel:IsBlown() then
+                    wheel:Repair()
+                    hasRepairedWheels = true
+                end
+            end
+        end
+
+        -- No need to run the code below
+        return hasRepairedWheels, hasRepairedWheels
+    end
+
+    local wasHealthIncreased = false
+    local hasFinished = false
+
+    -- Increate chassis/engine health, allowing overflow
+    if chassisHealth < vehicle.MaxChassisHealth then
+        chassisHealth = chassisHealth + chassisAmount
+        engineHealth = math.Clamp( engineHealth + engineAmount, 0, 1 )
+        wasHealthIncreased = true
+
+        if chassisHealth > 0.3 and vehicle.SetIsEngineOnFire then
+            vehicle:SetIsEngineOnFire( false )
+        end
+    end
+
+    -- If are at the health limit, or have overflowed it, set it to
+    -- the max. value, and call the vehicle's `Repair` function.
+    if chassisHealth > vehicle.MaxChassisHealth then
+        chassisHealth = vehicle.MaxChassisHealth
+        hasFinished = true
+
+        vehicle:Repair()
+    end
+
+    -- If we are at the max. chassis health already,
+    -- set the engine health to the max. value.
+    if chassisHealth >= vehicle.MaxChassisHealth then
+        engineHealth = 1
+        wasHealthIncreased = true
+    end
+
+    vehicle:SetChassisHealth( chassisHealth )
+    vehicle:SetEngineHealth( engineHealth )
+
+    return wasHealthIncreased, hasFinished
 end

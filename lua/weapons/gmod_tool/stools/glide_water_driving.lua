@@ -30,7 +30,7 @@ function TOOL:LeftClick( trace )
         end
 
         for _, wheel in Glide.EntityPairs( veh.wheels ) do
-            wheel.traceData.mask = MASK_SOLID + CONTENTS_WATER + CONTENTS_SLIME
+            wheel.state.traceData.mask = MASK_SOLID + CONTENTS_WATER + CONTENTS_SLIME
         end
     end
 
@@ -43,7 +43,7 @@ function TOOL:RightClick( trace )
 
     if SERVER then
         for _, wheel in Glide.EntityPairs( veh.wheels ) do
-            wheel.traceData.mask = nil
+            wheel.state.traceData.mask = nil
         end
     end
 

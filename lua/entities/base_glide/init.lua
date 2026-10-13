@@ -12,56 +12,8 @@ include( "sv_lights.lua" )
 include( "sv_water.lua" )
 include( "sh_vehicle_compat.lua" )
 
-duplicator.RegisterEntityClass( "base_glide", Glide.VehicleFactory, "Data" )
-
 local EntityMeta = FindMetaTable( "Entity" )
-local getTable = EntityMeta.GetTable
-
-local TriggerOutput = WireLib and WireLib.TriggerOutput or nil
-
-function ENT:OnEntityCopyTableFinish( data )
-    Glide.FilterEntityCopyTable( data, self.DuplicatorNetworkVariables )
-
-    -- Save radius for every individual wheel
-    local wheelRadius = {}
-    local wheelCount = 0
-
-    for i, w in Glide.EntityPairs( self.wheels ) do
-        if IsValid( w ) then
-            wheelRadius[i] = w:GetRadius()
-            wheelCount = wheelCount + 1
-        end
-    end
-
-    if wheelCount > 0 then
-        data["WheelRadius"] = wheelRadius
-    end
-end
-
-function ENT:OnDuplicated( data )
-    -- Restore radius for every individual wheel
-    local wheelRadius = data["WheelRadius"]
-    if type( wheelRadius ) ~= "table" then return end
-
-    local wheels = self.wheels
-    local w
-
-    for i, radius in pairs( wheelRadius ) do
-        w = wheels[i]
-
-        if IsValid( w ) and type( radius ) == "number" then
-            w:ChangeRadius( radius )
-        end
-    end
-end
-
-function ENT:PreEntityCopy()
-    Glide.PreEntityCopy( self )
-end
-
-function ENT:PostEntityPaste( ply, ent, createdEntities )
-    Glide.PostEntityPaste( ply, ent, createdEntities )
-end
+local GetTable = EntityMeta.GetTable
 
 --- Handle spawning this vehicle from the spawn menu or `gm_spawn` command.
 function ENT:SpawnFunction( ply, tr )
@@ -101,14 +53,19 @@ function ENT:Initialize()
     self.exitPos = {}   -- Per-seat exit offsets
     self.lastDriver = NULL
     self.lastBodygroups = {}
+    self.isEngineEnabled = true
 
     self.inputBools = {}        -- Per-seat bool inputs
     self.inputFloats = {}       -- Per-seat float inputs
     self.inputFlyMode = 0           -- User mouse flying mode
     self.inputManualShift = false   -- User manual gear shifting setting
     self.autoTurnOffLights = false  -- User "turn off headlights" setting
+    self.autoTurnOnEngine = true
     self.inputThrottleModifierMode = 0  -- User throttle modifier setting
     self.inputThrottleModifierToggle = false
+
+    -- Input actions that can be held to run alternative logic.
+    self.holdInputActions = {}
 
     -- Setup collision variables
     self.collisionShakeCooldown = 0
@@ -125,7 +82,7 @@ function ENT:Initialize()
 
     -- Setup trace filter used by wheels to
     -- to ignore the vehicle's chassis and seats.
-    self.wheelTraceFilter = { self, "player" }
+    self.wheelTraceFilter = { self, "player", "npc_*" }
 
     -- Copy default surface multipliers to this vehicle.
     self.surfaceGrip = table.Copy( Glide.SURFACE_GRIP )
@@ -151,7 +108,7 @@ function ENT:Initialize()
     phys:SetDamping( 0, 0 )
     phys:SetDragCoefficient( 0 )
     phys:SetAngleDragCoefficient( 0 )
-    phys:SetBuoyancyRatio( 0.05 )
+    phys:SetBuoyancyRatio( 0.0 )
     phys:EnableMotion( true )
     phys:Wake()
 
@@ -171,39 +128,7 @@ function ENT:Initialize()
     local headlightColor = Glide.DEFAULT_HEADLIGHT_COLOR
     self:SetHeadlightColor( Vector( headlightColor.r / 255, headlightColor.g / 255, headlightColor.b / 255 ) )
 
-    local data = { Color = self:GetSpawnColor() }
-
-    self:SetColor( data.Color )
-    duplicator.StoreEntityModifier( self, "colour", data )
-
-    -- Setup wiremod ports
-    if WireLib then
-        local inputs, outputs = {}, {}
-
-        self:SetupWiremodPorts( inputs, outputs )
-
-        -- Separate input names, types and descriptions
-        local inNames, inTypes, inDescr = {}, {}, {}
-
-        for i, v in ipairs( inputs ) do
-            inNames[i] = v[1]
-            inTypes[i] = v[2]
-            inDescr[i] = v[3]
-        end
-
-        WireLib.CreateSpecialInputs( self, inNames, inTypes, inDescr )
-
-        -- Separate output names, types and descriptions
-        local outNames, outTypes, outDescr = {}, {}, {}
-
-        for i, v in ipairs( outputs ) do
-            outNames[i] = v[1]
-            outTypes[i] = v[2]
-            outDescr[i] = v[3]
-        end
-
-        WireLib.CreateSpecialOutputs( self, outNames, outTypes, outDescr )
-    end
+    self:SetColor( self:GetSpawnColor() )
 
     -- Let child classes add their own features
     self:OnPostInitialize()
@@ -216,6 +141,13 @@ function ENT:Initialize()
 
     -- Allow players to shoot fast-moving vehicles when their ping is high
     self:SetLagCompensated( true )
+
+    -- Only check for PhysObj validity/sleepyness every one in a while instead of every tick.
+    -- This may approach might cause errors, but only for a brief time,
+    -- until the next PhysObj:IsValid call is made.
+    self.hasValidPhysics = true
+    self.hasSleepingPhysics = false
+    self.nextPhysicsValidCheck = 0
 end
 
 function ENT:InitializePhysics()
@@ -236,8 +168,7 @@ function ENT:Use( activator )
         local seat = self:GetFreeSeat()
 
         if seat then
-            activator:SetAllowWeaponsInVehicle( false )
-            activator:EnterVehicle( seat )
+            Glide.EnterVehicleSeat( activator, self, seat )
             return
         end
     end
@@ -245,8 +176,7 @@ function ENT:Use( activator )
     local freeSeat = self:GetClosestAvailableSeat( activator:GetShootPos() )
 
     if freeSeat then
-        activator:SetAllowWeaponsInVehicle( false )
-        activator:EnterVehicle( freeSeat )
+        Glide.EnterVehicleSeat( activator, self, freeSeat )
     end
 end
 
@@ -258,12 +188,12 @@ function ENT:OnEngineStateChange( _, lastState, state )
         self:OnTurnOff()
     end
 
-    if WireLib then
-        WireLib.TriggerOutput( self, "EngineState", state )
-    end
+    self:AwakePhysics()
 end
 
 function ENT:TurnOn()
+    if not self.isEngineEnabled then return end
+
     local state = self:GetEngineState()
 
     if state == 3 then
@@ -487,19 +417,20 @@ end
 
 --- Gets the closest available seat to a position.
 function ENT:GetClosestAvailableSeat( pos )
-    local closestSeat = nil
+    local closestSeat, closestSeatIndex = nil, nil
     local closestDistance = math.huge
 
-    for _, seat in EntityPairs( self.seats ) do
+    for i, seat in EntityPairs( self.seats ) do
         local distance = pos:DistToSqr( seat:GetPos() )
 
         if distance < closestDistance and not IsValid( seat:GetDriver() ) then
             closestSeat = seat
+            closestSeatIndex = i
             closestDistance = distance
         end
     end
 
-    return closestSeat
+    return closestSeat, closestSeatIndex
 end
 
 --- Create a new seat.
@@ -564,21 +495,6 @@ function ENT:CreateSeat( offset, angle, exitPos, isHidden )
     self.selfTraceFilter[#self.selfTraceFilter + 1] = seat
     self.wheelTraceFilter[#self.wheelTraceFilter + 1] = seat
 
-    -- Update seat wire outputs
-    if TriggerOutput then
-        if index == 1 then
-            TriggerOutput( self, "DriverSeat", seat )
-        else
-            local passengerSeats = {}
-
-            for i = 2, #self.seats do
-                passengerSeats[i - 1] = self.seats[i]
-            end
-
-            TriggerOutput( self, "PassengerSeats", passengerSeats )
-        end
-    end
-
     return seat
 end
 
@@ -588,18 +504,21 @@ local GetDevMode = Glide.GetDevMode
 
 function ENT:Think()
     local dt = TickInterval()
-    local selfTbl = getTable( self )
+    local selfTbl = GetTable( self )
 
     -- Run again next tick
     local time = CurTime()
     self:NextThink( time )
 
     -- Update speed variables
-    selfTbl.localVelocity = self:WorldToLocal( self:GetPos() + self:GetVelocity() )
+    local pos = self:GetPos()
+    local velocity = self:GetVelocity()
+    velocity:Add( pos )
+
+    selfTbl.localVelocity = self:WorldToLocal( velocity )
     selfTbl.totalSpeed = selfTbl.localVelocity:Length()
 
     local forwardSpeed = selfTbl.localVelocity[1]
-
     selfTbl.forwardAcceleration = ( forwardSpeed - selfTbl.forwardSpeed ) / dt
     selfTbl.forwardSpeed = forwardSpeed
 
@@ -609,133 +528,92 @@ function ENT:Think()
         local driverSeat = selfTbl.seats[1]
         local driver = IsValid( driverSeat ) and driverSeat:GetDriver() or NULL
 
-        if driver ~= self:GetDriver() then
-            self:SetDriver( driver )
+        if driver ~= selfTbl.GetDriver( self ) then
+            selfTbl.SetDriver( self, driver )
 
             if IsValid( driver ) then
-                if TriggerOutput then
-                    TriggerOutput( self, "Active", 1 )
-                    TriggerOutput( self, "Driver", driver )
-                end
-
-                self:OnDriverEnter()
+                selfTbl.OnDriverEnter( self )
                 selfTbl.lastDriver = driver
             else
-                if TriggerOutput then
-                    TriggerOutput( self, "Active", 0 )
-                    TriggerOutput( self, "Driver", NULL )
-                end
+                selfTbl.OnDriverExit( self )
+            end
+        end
+    end
 
-                self:OnDriverExit()
+    local phys = self:GetPhysicsObject()
+
+    -- Check physics object every 2 seconds
+    if time > selfTbl.nextPhysicsValidCheck then
+        selfTbl.nextPhysicsValidCheck = time + 2
+        selfTbl.hasValidPhysics = IsValid( phys )
+        selfTbl.hasSleepingPhysics = selfTbl.hasValidPhysics and phys:IsAsleep()
+
+        if selfTbl.hasValidPhysics then
+            local lin, ang = phys:GetDamping()
+
+            if lin > 0 or ang > 0 then
+                phys:SetDamping( 0, 0 )
             end
         end
     end
 
     -- Update water logic
-    self:WaterThink( selfTbl )
+    selfTbl.WaterThink( self, selfTbl, dt )
 
     -- Deal engine fire damage over time
-    if self:GetIsEngineOnFire() then
+    if selfTbl.GetIsEngineOnFire( self ) then
         if self:WaterLevel() > 2 then
-            self:SetIsEngineOnFire( false )
+            selfTbl.SetIsEngineOnFire( self, false )
         else
-            local attacker = IsValid( self.lastDamageAttacker ) and self.lastDamageAttacker or self
-            local inflictor = IsValid( self.lastDamageInflictor ) and self.lastDamageInflictor or self
+            local attacker = IsValid( selfTbl.lastDamageAttacker ) and selfTbl.lastDamageAttacker or self
+            local inflictor = IsValid( selfTbl.lastDamageInflictor ) and selfTbl.lastDamageInflictor or self
 
             local dmg = DamageInfo()
-            dmg:SetDamage( self.MaxChassisHealth * self.ChassisFireDamageMultiplier * dt )
+            dmg:SetDamage( selfTbl.MaxChassisHealth * selfTbl.ChassisFireDamageMultiplier * dt )
             dmg:SetAttacker( attacker )
             dmg:SetInflictor( inflictor )
             dmg:SetDamageType( 0 )
             dmg:SetDamageForce( Vector() )
-            dmg:SetDamagePosition( self:GetPos() )
+            dmg:SetDamagePosition( pos )
             self:TakeDamageInfo( dmg )
         end
     end
 
+    local isValidPhys = selfTbl.hasValidPhysics
+
     -- Update wheels
-    if selfTbl.wheelCount > 0 then
-        self:WheelThink( dt )
+    if selfTbl.wheelCount > 0 and isValidPhys then
+        selfTbl.WheelThink( self, dt, selfTbl )
+    end
+
+    -- Handle hold input actions
+    for action, data in pairs( selfTbl.holdInputActions ) do
+        -- If this action has been held for long enough...
+        if data.timer and time > data.timer then
+            data.timer = nil
+            selfTbl.OnHoldInputAction( self, action, data )
+
+        elseif data.shouldRelease then
+            data.shouldRelease = nil
+            selfTbl.SetInputBool( self, 1, action, false )
+        end
     end
 
     -- Update bodygroups
-    self:UpdateLightBodygroups()
+    selfTbl.UpdateLightBodygroups( self, selfTbl )
 
     -- Let children classes do their own stuff
-    self:OnPostThink( dt, selfTbl )
+    selfTbl.OnPostThink( self, dt, selfTbl )
 
     -- Let children classes update their features
-    self:OnUpdateFeatures( dt )
-
-    local phys = self:GetPhysicsObject()
-
-    if IsValid( phys ) then
-        self:ValidatePhysSettings( phys )
-    end
+    selfTbl.OnUpdateFeatures( self, dt )
 
     -- Draw debug overlays, if `developer` cvar is active
-    if GetDevMode() then
+    if GetDevMode() and isValidPhys then
         debugoverlay.Axis( self:LocalToWorld( phys:GetMassCenter() ), self:GetAngles(), 15, 0.1, true )
     end
 
     return true
-end
-
-local Abs = math.abs
-
---- Make sure nothing messed with
---- our physics damping and buoyancy values.
-function ENT:ValidatePhysSettings( phys )
-    phys:SetBuoyancyRatio( 0.02 )
-
-    local lin, ang = phys:GetDamping()
-
-    if lin > 0 or ang > 0 then
-        phys:SetDamping( 0, 0 )
-    end
-
-    -- Make sure the physics stay awake when necessary,
-    -- otherwise the driver's input won't do anything.
-    local driverInput =
-        self:GetInputFloat( 1, "accelerate" ) +
-        self:GetInputFloat( 1, "brake" ) +
-        self:GetInputFloat( 1, "steer" ) +
-        self:GetInputFloat( 1, "throttle" )
-
-    if phys:IsAsleep() and Abs( driverInput ) > 0.01 then
-        phys:Wake()
-    end
-end
-
-function ENT:UpdateHealthOutputs()
-    if not TriggerOutput then return end
-
-    TriggerOutput( self, "MaxChassisHealth", self.MaxChassisHealth )
-    TriggerOutput( self, "ChassisHealth", self:GetChassisHealth() )
-    TriggerOutput( self, "EngineHealth", self:GetEngineHealth() )
-end
-
-function ENT:TriggerInput( name, value )
-    if name == "EjectDriver" and value > 0 then
-        local seat = self.seats[1]
-
-        if IsValid( seat ) then
-            local driver = seat:GetDriver()
-
-            if IsValid( driver ) then
-                driver:ExitVehicle()
-            end
-        end
-
-    elseif name == "LockVehicle" then
-        self:SetLocked( value > 0 )
-
-    elseif name == "Headlights" then
-        self:ChangeHeadlightState( value, true )
-
-    elseif name == "TurnSignal" then
-        self:ChangeTurnSignalState( value, true )
-    end
 end
 
 local colors = {

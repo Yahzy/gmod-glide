@@ -39,6 +39,7 @@ if SERVER then
     ENT.AngularDrag = Vector( 0, -2, -6 ) -- Roll, pitch, yaw
 
     ENT.SuspensionHeavySound = "Glide.Suspension.CompressBike"
+    ENT.SuspensionLandFromFall = "Glide.OnLand.Bike"
 
     ENT.AirControlForce = Vector( 0.8, 3, 1.5 ) -- Roll, pitch, yaw
     ENT.AirMaxAngularVelocity = Vector( 600, 600, 500 ) -- Roll, pitch, yaw

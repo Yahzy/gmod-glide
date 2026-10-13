@@ -35,3 +35,17 @@ list.Set( "GlideWheelModels", "models/props_vehicles/apc_tire001.mdl", { angle =
 list.Set( "GlideWheelModels", "models/xeon133/offroad/off-road-30.mdl", { angle = Angle( 0, 90, 0 ), scale = Vector( 0.4, 1, 1 ) } )
 list.Set( "GlideWheelModels", "models/xeon133/racewheel/race-wheel-30.mdl", { angle = Angle( 90, 0, 0 ), scale = Vector( 1, 0.4, 1 ) } )
 list.Set( "GlideWheelModels", "models/xqm/airplanewheel1medium.mdl", { angle = Angle( 0, 90, 0 ), scale = Vector( 0.35, 1, 1 ) } )
+
+-- Add all entities that are children of `base_glide`
+-- (or any of it's children classes) to a separate list.
+hook.Add( "PreRegisterSENT", "Glide.RegisterEntityClasses", function( tbl, class )
+    if not tbl or not class then return end
+    if not tbl.GlideCategory or tbl.GlideCategory == "" then return end
+
+    list.Set( "GlideVehicles", class, {
+        Name = tbl.PrintName or class,
+        Category = tbl.GlideCategory or "Default",
+        IconOverride = tbl.IconOverride,
+        Model = tbl.ChassisModel
+    } )
+end )

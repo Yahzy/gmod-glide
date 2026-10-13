@@ -51,7 +51,7 @@ end
 
 do
     local Remove = table.remove
-    local GetHumans = player.GetHumans
+    local AllPlayers = player.Iterator
 
     -- We're going to loop through one active modifier at intervals,
     -- so we need this variable to track that loop over time.
@@ -80,7 +80,7 @@ do
 
         synced = mod.synced
 
-        for _, ply in ipairs( GetHumans() ) do
+        for _, ply in AllPlayers() do
             -- If we have not synced this  entry to this player yet...
             if not synced[ply] and ply.GlideLoaded then
                 synced[ply] = true
@@ -202,13 +202,6 @@ Glide.StoreEngineStreamPresetModifier, Glide.ClearEngineStreamPresetModifier = G
         -- Make sure this entity is a Glide vehicle that supports this modifier
         if not Glide.DoesEntitySupportEngineStreamPreset( ent ) then return end
 
-        -- Migrate from the old data format, where the preset was
-        -- stored as a string on the `json` key. On the new format,
-        -- the preset data is stored on the `data` table directly.
-        if type( data.json ) == "string" then
-            data = Glide.FromJSON( data.json )
-        end
-
         local success, message = Glide.ValidateStreamData( data )
 
         if success then
@@ -228,13 +221,6 @@ Glide.StoreMiscSoundsPresetModifier, Glide.ClearMiscSoundsPresetModifier = Glide
     function( ply, ent, data )
         -- Make sure this entity is a Glide vehicle that supports this modifier
         if not Glide.DoesEntitySupportMiscSoundsPreset( ent ) then return end
-
-        -- Migrate from the old data format, where the preset was
-        -- stored as a string on the `json` key. On the new format,
-        -- the preset data is stored on the `data` table directly.
-        if type( data.json ) == "string" then
-            data = Glide.FromJSON( data.json )
-        end
 
         local success, message = Glide.ValidateMiscSoundData( data )
 

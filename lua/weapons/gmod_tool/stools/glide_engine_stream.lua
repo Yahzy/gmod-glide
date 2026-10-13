@@ -28,7 +28,7 @@ function TOOL:CanSendData( veh )
         return false
     end
 
-    self.fireCooldown = t + 0.5
+    self.fireCooldown = t + 1
 
     return true
 end
@@ -51,19 +51,16 @@ function TOOL:LeftClick( trace )
             return false
         end
 
-        data = util.Compress( data )
+        data = Glide.FromJSON( Glide.lastStreamPresetData )
 
-        local size = #data
-
-        if size > Glide.MAX_JSON_SIZE then
-            Glide.Print( "Tried to write data that was too big! (%d/%d)", size, Glide.MAX_JSON_SIZE )
-            return
+        if table.IsEmpty( data ) then
+            Glide.Print( "The Engine Stream data is empty!" )
+            return false
         end
 
         Glide.StartCommand( Glide.CMD_UPLOAD_ENGINE_STREAM_PRESET, false )
         net.WriteEntity( veh )
-        net.WriteUInt( size, 16 )
-        net.WriteData( data )
+        Glide.WriteTable( data )
         net.SendToServer()
     end
 

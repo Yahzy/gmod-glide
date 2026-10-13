@@ -74,23 +74,58 @@ function Config:ResetBinds()
         end
     end
 
-    -- Use the player's movement keys for these binds, for users with different keyboard layouts
-    local SetButtonFromBinding = function( bind, groupId, action )
-        local keyName = input.LookupBinding( bind )
-        if not keyName then return end
+    self.binds = binds
+    self:ApplyGameBinds()
+end
 
-        local buttonCode = input.GetKeyCode( keyName )
-        if not buttonCode then return end
+-- Actions that always use the player's own GMod movement keys,
+-- so every player gets the right keys automatically (AZERTY, custom binds, etc.)
+Config.GAME_BINDS = {
+    land_controls = {
+        accelerate = "+forward",
+        brake = "+back",
+        steer_left = "+moveleft",
+        steer_right = "+moveright",
+        handbrake = "+jump",
+        throttle_modifier = "+speed"
+    }
+}
 
-        binds[groupId][action] = buttonCode
+function Config:IsGameBind( groupId, action )
+    local group = self.GAME_BINDS[groupId]
+    return group ~= nil and group[action] ~= nil
+end
+
+--- Copy the player's GMod movement keys into the binds table.
+--- Returns `true` if any bind changed.
+function Config:ApplyGameBinds()
+    local binds = self.binds
+    if not binds then return false end
+
+    local changed = false
+
+    for groupId, actions in pairs( self.GAME_BINDS ) do
+        local groupBinds = binds[groupId]
+
+        if groupBinds then
+            for action, bind in pairs( actions ) do
+                local keyName = input.LookupBinding( bind )
+                local button = keyName and input.GetKeyCode( keyName )
+
+                -- Fallback to the default key if this bind is not set
+                if not button or button <= KEY_NONE then
+                    button = Glide.InputGroups[groupId][action]
+                end
+
+                if groupBinds[action] ~= button then
+                    groupBinds[action] = button
+                    changed = true
+                end
+            end
+        end
     end
 
-    SetButtonFromBinding( "+forward", "land_controls", "accelerate" )
-    SetButtonFromBinding( "+back", "land_controls", "brake" )
-    SetButtonFromBinding( "+moveleft", "land_controls", "steer_left" )
-    SetButtonFromBinding( "+moveright", "land_controls", "steer_right" )
-
-    self.binds = binds
+    return changed
 end
 
 -- Utility function to get the button bound to a certain input action.
@@ -293,6 +328,8 @@ function Config:Load()
         end
     end
 
+    self:ApplyGameBinds()
+
     hook.Run( "Glide_OnConfigChange" )
 end
 
@@ -353,6 +390,14 @@ end
 -- Set settings to default right away, to prevent errors
 Config:Reset()
 Config:ResetBinds()
+
+-- Follow changes to the player's GMod movement keys
+timer.Create( "Glide.CheckGameBinds", 2, 0, function()
+    if Config:ApplyGameBinds() then
+        hook.Run( "Glide_OnConfigChange" )
+        Config:TransmitInputSettings()
+    end
+end )
 
 if game.SinglePlayer() then
     -- On singleplayer, load settings on InitPostEntity
@@ -809,8 +854,14 @@ function Config:OpenFrame()
             self:TransmitInputSettings()
         end
 
+        if self.GAME_BINDS[groupId] then
+            StyledTheme.CreateFormLabel( panelKeyboard, L"input.game_binds" )
+        end
+
         for action, _ in SortedPairs( actions ) do
-            CreateBinderButton( panelKeyboard, action, groupId, groupBinds[action], OnChangeGroupBind )
+            if not self:IsGameBind( groupId, action ) then
+                CreateBinderButton( panelKeyboard, action, groupId, groupBinds[action], OnChangeGroupBind )
+            end
 
             if extraActionFunctions[action] then
                 extraActionFunctions[action]()

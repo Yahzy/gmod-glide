@@ -118,26 +118,24 @@ function Glide.CanLockVehicle( ply, vehicle )
     return hook.Run( "Glide_CanLockVehicle", ply, vehicle ) or false
 end
 
-local cvarAlwaysEnterLocked = GetConVar( "glide_always_can_enter_locked_vehicles" )
 
 --- Check if a player can enter a locked vehicle.
 function Glide.CanEnterLockedVehicle( ply, vehicle )
     local canEnter = hook.Run( "Glide_CanEnterLockedVehicle", ply, vehicle )
     if canEnter == false then return false end
 
-    if cvarAlwaysEnterLocked:GetBool() then return true end
+    if Glide.Config.alwaysCanEnterLockedVehicles then return true end
     if not canEnter then return false end
 
     return Glide.CanLockVehicle( ply, vehicle )
 end
 
-local cvarAllowPlayerWeaponsInVehicle = GetConVar( "glide_allow_player_weapons_in_vehicle" )
 
 function Glide.EnterVehicleSeat( ply, vehicle, seat )
     if not IsValid( vehicle ) or not IsValid( seat ) then return end
     if not seat.GlideSeatIndex then return end
 
-    ply:SetAllowWeaponsInVehicle( cvarAllowPlayerWeaponsInVehicle:GetBool() )
+    ply:SetAllowWeaponsInVehicle( Glide.Config.allowPlayerWeaponsInVehicle )
     ply:EnterVehicle( seat )
 end
 

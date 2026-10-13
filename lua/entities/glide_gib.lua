@@ -43,14 +43,11 @@ end
 
 if not SERVER then return end
 
-local lifetimeCvar = GetConVar( "glide_gib_lifetime" )
-local collisionCvar = GetConVar( "glide_gib_enable_collisions" )
-
 function ENT:Initialize()
     self:SetSolid( SOLID_VPHYSICS )
     self:SetMoveType( MOVETYPE_VPHYSICS )
 
-    if collisionCvar:GetInt() == 0 then
+    if not Glide.Config.gibEnableCollisions then
         self:SetCollisionGroup( COLLISION_GROUP_DEBRIS )
     end
 
@@ -67,7 +64,7 @@ function ENT:Initialize()
         phys:SetDragCoefficient( 1 )
     end
 
-    local lifetime = lifetimeCvar:GetFloat()
+    local lifetime = Glide.Config.gibLifetime
     if lifetime == 0 then
         self.lifeTime = 0
     else

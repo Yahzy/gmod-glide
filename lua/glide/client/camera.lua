@@ -1,4 +1,5 @@
 local Camera = Glide.Camera
+local cvarFOV = GetConVar( "fov_desired" )
 
 Camera.hooks = Camera.hooks or {}
 Camera.isInFirstPerson = Camera.isInFirstPerson == true
@@ -182,7 +183,16 @@ function Camera:DoEffects( t, dt, speed )
     -- Update FOV depending on user settings and speed
     speed = speed - 400
 
-    local fov = ( self.isInFirstPerson and Config.cameraFOVInternal or Config.cameraFOVExternal ) + Clamp( speed * 0.01, 0, 20 )
+    local fov
+
+    if self.isInFirstPerson then
+        fov = Config.cameraFOVInternal
+    else
+        fov = Config.cameraFOVExternal
+    end
+
+    -- Use the player's own FOV when the config does not set one
+    fov = ( fov or cvarFOV:GetFloat() ) + Clamp( speed * 0.01, 0, 20 )
     local keyZoom = self.user:KeyDown( IN_ZOOM )
 
     self.fov = ExpDecay( self.fov, keyZoom and 20 or fov, keyZoom and 5 or 2, dt )

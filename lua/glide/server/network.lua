@@ -21,42 +21,6 @@ commands[Glide.CMD_SET_HEADLIGHTS] = function( ply )
     end
 end
 
-commands[Glide.CMD_UPLOAD_ENGINE_STREAM_PRESET] = function( ply )
-    local veh = net.ReadEntity()
-
-    if not IsValid( veh ) then return end
-    if not veh.IsGlideVehicle then return end
-
-    -- Make sure this player can tool this vehicle
-    local tr = ply:GetEyeTrace()
-    tr.Entity = veh
-
-    if hook.Run( "CanTool", ply, tr, "glide_engine_stream", {}, 1 ) == false then return end
-
-    local data = Glide.ReadTable()
-    if table.IsEmpty( data ) then return end
-
-    Glide.StoreEngineStreamPresetModifier( ply, veh, data )
-end
-
-commands[Glide.CMD_UPLOAD_MISC_SOUNDS_PRESET] = function( ply )
-    local veh = net.ReadEntity()
-
-    if not IsValid( veh ) then return end
-    if not veh.IsGlideVehicle then return end
-
-    -- Make sure this player can tool this vehicle
-    local tr = ply:GetEyeTrace()
-    tr.Entity = veh
-
-    if hook.Run( "CanTool", ply, tr, "glide_misc_sounds", {}, 1 ) == false then return end
-
-    local data = Glide.ReadTable()
-    if table.IsEmpty( data ) then return end
-
-    Glide.StoreMiscSoundsPresetModifier( ply, veh, data )
-end
-
 -- Store the last entity the CLIENT told it was aiming at.
 -- Used for lag compensation on turrets.
 local lastAimEntity = Glide.lastAimEntity or {}
@@ -76,9 +40,7 @@ local cooldowns = {
     [Glide.CMD_INPUT_SETTINGS] = { interval = 1, players = {} },
     [Glide.CMD_SWITCH_SEATS] = { interval = 0.5, players = {} },
     [Glide.CMD_SET_HEADLIGHTS] = { interval = 0.5, players = {} },
-    [Glide.CMD_LAST_AIM_ENTITY] = { interval = 0.01, players = {} },
-    [Glide.CMD_UPLOAD_ENGINE_STREAM_PRESET] = { interval = 0.9, players = {} },
-    [Glide.CMD_UPLOAD_MISC_SOUNDS_PRESET] = { interval = 0.9, players = {} }
+    [Glide.CMD_LAST_AIM_ENTITY] = { interval = 0.01, players = {} }
 }
 
 -- Receive and validate network commands

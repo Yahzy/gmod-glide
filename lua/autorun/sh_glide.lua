@@ -145,30 +145,12 @@ if CLIENT then
     }
 end
 
-if SERVER then
-    -- Damage multiplier convars
-    CreateConVar( "glide_bullet_damage_multiplier", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "Damage multiplier for bullets hitting Glide vehicles.", 0, 10 )
-    CreateConVar( "glide_blast_damage_multiplier", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "Damage multiplier for explosions hitting Glide vehicles.", 0, 10 )
-    CreateConVar( "glide_physics_damage_multiplier", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "Damage multiplier taken by Glide vehicles after colliding against things that are not the world.", 0, 10 )
-    CreateConVar( "glide_world_physics_damage_multiplier", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "Damage multiplier taken by Glide vehicles after colliding against the world.", 0, 10 )
-    CreateConVar( "glide_global_damage_multiplier", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY, "Multiplier for damage taken from any source (except collisions).", 0, 10 )
-    CreateConVar( "glide_player_collision_damage_multiplier", "0.5", FCVAR_ARCHIVE + FCVAR_NOTIFY, "Damage multiplier for players inside vehicles taking damage from hard collisions.", 0, 2 )
-end
-
--- Toggles
-CreateConVar( "glide_allow_gravity_gun_punt", "0", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "When set to 1, allows players to push vehicles with the Gravity Gun.", 0, 1 )
-CreateConVar( "glide_enable_damage_player_on_collision", "0", FCVAR_ARCHIVE + FCVAR_REPLICATED, "Whether players inside vehicles can take damage from hard collisions.", 0, 1 )
-CreateConVar( "glide_always_can_enter_locked_vehicles", "0", FCVAR_ARCHIVE + FCVAR_REPLICATED, "Whether players can enter locked vehicles they don't own.", 0, 1 )
-CreateConVar( "glide_allow_player_weapons_in_vehicle", "0", FCVAR_ARCHIVE + FCVAR_REPLICATED, "Allows player to use their own weapons in a vehicle.", 0, 1 )
-
 -- Sandbox limits
 cleanup.Register( "glide_vehicles" )
 
 CreateConVar( "sbox_maxglide_vehicles", "5", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Max. number of Glide vehicles that one player can have", 0 )
 
--- Gib convars
-CreateConVar( "glide_gib_lifetime", "8", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "Lifetime of Glide Gibs, 0 for no despawning.", 0 )
-CreateConVar( "glide_gib_enable_collisions", "1", FCVAR_ARCHIVE + FCVAR_NOTIFY + FCVAR_REPLICATED, "When set to 0, gibs wont collide with players/props.", 0, 1 )
+-- Used by other addons
 CreateConVar("glide_bodygroupdamage_giblifetime", "15", {FCVAR_ARCHIVE}, "Lifetime of gibs from bodygroup damage in seconds.")
 
 list.Set( "ContentCategoryIcons", "Glide", "materials/glide/icons/car.png" )
@@ -266,6 +248,12 @@ function Glide.IncludeDir( dirPath, doInclude, doTransfer )
     end
 end
 
+-- Settings (constants)
+Glide.Config = Glide.Config or {}
+
+AddCSLuaFile( "glide_config.lua" )
+include( "glide_config.lua" )
+
 if SERVER then
     -- Shared files
     Glide.IncludeDir( "glide/", true, true )
@@ -274,31 +262,18 @@ if SERVER then
     Glide.IncludeDir( "glide/server/", true, false )
 
     -- Client-only files
-    AddCSLuaFile( "includes/modules/styled_theme.lua" )
-    AddCSLuaFile( "includes/modules/styled_theme_tabbed_frame.lua" )
-    AddCSLuaFile( "includes/modules/styled_theme_file_browser.lua" )
-
     Glide.IncludeDir( "glide/client/", false, true )
-    Glide.IncludeDir( "glide/client/vgui/", false, true )
 end
 
 if CLIENT then
     -- Make these tables are available before we load everything
-    Glide.Config = Glide.Config or {}
     Glide.Camera = Glide.Camera or {}
-    Glide.WebAudio = Glide.WebAudio or {}
 
     -- Shared files
     Glide.IncludeDir( "glide/", true, false )
 
-    -- UI theme library
-    require( "styled_theme" )
-    require( "styled_theme_tabbed_frame" )
-    require( "styled_theme_file_browser" )
-
     -- Client-only files
     Glide.IncludeDir( "glide/client/", true, false )
-    Glide.IncludeDir( "glide/client/vgui/", true, false )
 end
 
 -- Automatically include files under

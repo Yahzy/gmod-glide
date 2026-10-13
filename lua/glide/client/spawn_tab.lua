@@ -53,12 +53,6 @@ hook.Add( "PopulateVehicles", "Glide.PopulateVehicles", function( panel, tree )
     for id, category in SortedPairs( categories ) do
         CreateCategory( node, panel, category.name, category.icon, id )
     end
-
-    local nodeConfig = node:AddNode( "#glide.settings", "icon16/cog.png" )
-
-    nodeConfig.DoClick = function()
-        Glide.Config:OpenFrame()
-    end
 end )
 
 local IsTable = istable

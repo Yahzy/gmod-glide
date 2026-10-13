@@ -98,18 +98,16 @@ end
 
 local IsValid = IsValid
 
-local cvarBullet = GetConVar( "glide_bullet_damage_multiplier" )
-local cvarBlast = GetConVar( "glide_blast_damage_multiplier" )
-local cvarGlobal = GetConVar( "glide_global_damage_multiplier" )
+local Config = Glide.Config
 
 function ENT:OnTakeDamage( dmginfo )
     if self.hasExploded then return end
 
     local health = self:GetChassisHealth()
-    local amount = dmginfo:GetDamage() * cvarGlobal:GetFloat()
+    local amount = dmginfo:GetDamage() * Config.globalDamageMultiplier
 
     if dmginfo:IsDamageType( 64 ) then -- DMG_BLAST
-        amount = amount * self.BlastDamageMultiplier * cvarBlast:GetFloat()
+        amount = amount * self.BlastDamageMultiplier * Config.blastDamageMultiplier
 
         local phys = self:GetPhysicsObject()
 
@@ -121,7 +119,7 @@ function ENT:OnTakeDamage( dmginfo )
         end
 
     elseif dmginfo:IsDamageType( 2 ) then -- DMG_BULLET
-        amount = amount * self.BulletDamageMultiplier * cvarBullet:GetFloat()
+        amount = amount * self.BulletDamageMultiplier * Config.bulletDamageMultiplier
     end
 
     health = math.max( 0, health - amount )
@@ -149,10 +147,6 @@ local Clamp = math.Clamp
 local RandomInt = math.random
 local PlaySoundSet = Glide.PlaySoundSet
 
-local cvarCollision = GetConVar( "glide_physics_damage_multiplier" )
-local cvarWorldCollision = GetConVar( "glide_world_physics_damage_multiplier" )
-local cvarEnablePlayerCollisionDamage = GetConVar( "glide_enable_damage_player_on_collision" )
-local cvarPlayerCollisionDamageMult = GetConVar( "glide_player_collision_damage_multiplier" )
 
 function ENT:PhysicsCollide( data )
     if isfunction(self.UVPhysicsCollide) then
@@ -210,11 +204,11 @@ function ENT:PhysicsCollide( data )
     if not isPlayer and isHardHit then
         -- `ent:IsWorld` is returning `false` on "Entity [0][worldspawn]",
         -- so I'm comparing against `game.GetWorld` instead.
-        local multiplier = ent == GetWorld() and cvarWorldCollision:GetFloat() or cvarCollision:GetFloat()
+        local multiplier = ent == GetWorld() and Config.worldPhysicsDamageMultiplier or Config.physicsDamageMultiplier
         local damage = ( speed / 10 ) * self.CollisionDamageMultiplier * multiplier
 
         -- Counteract the global damage multiplier
-        damage = damage / cvarGlobal:GetFloat()
+        damage = damage / Config.globalDamageMultiplier
 
         local dmg = DamageInfo()
         dmg:SetAttacker( ent )
@@ -224,9 +218,9 @@ function ENT:PhysicsCollide( data )
         dmg:SetDamagePosition( data.HitPos )
         self:TakeDamageInfo( dmg )
 
-        if not cvarEnablePlayerCollisionDamage:GetBool() then return end
+        if not Config.enablePlayerCollisionDamage then return end
 
-        local playerDamage = damage * cvarPlayerCollisionDamageMult:GetFloat()
+        local playerDamage = damage * Config.playerCollisionDamageMultiplier
         if playerDamage < 1 then return end
 
         local attacker = IsValid( ent ) and ent or game.GetWorld()

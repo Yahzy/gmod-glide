@@ -167,7 +167,7 @@ function TOOL:LeftClick( trace )
 
         local paramsPerWheel = {}
 
-        if type( vehicle.EntityMods["glide_wheel_params"] ) == "table" then
+        if vehicle.EntityMods and type( vehicle.EntityMods["glide_wheel_params"] ) == "table" then
             paramsPerWheel = table.Copy( vehicle.EntityMods["glide_wheel_params"] )
         end
 

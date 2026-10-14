@@ -36,7 +36,7 @@ end
 --- Unlike `ENT:GetGears()` this will return overrides from
 --- the Transmission Editor tool, if they're set.
 function ENT:GetGearList()
-    local overrideGears = self.EntityMods["glide_transmission_overrides"]
+    local overrideGears = self.EntityMods and self.EntityMods["glide_transmission_overrides"]
 
     if type( overrideGears ) == "table" then
         return overrideGears

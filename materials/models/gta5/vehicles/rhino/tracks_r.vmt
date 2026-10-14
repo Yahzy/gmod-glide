@@ -1,0 +1,6 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/gta5/vehicles/rhino/tracks"
+	"$bumpmap" "models/gta5/vehicles/rhino/tracks_n"
+	"$allowdiffusemodulation" "false"
+}

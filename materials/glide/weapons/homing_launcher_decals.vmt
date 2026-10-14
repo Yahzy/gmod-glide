@@ -1,0 +1,7 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "glide/weapons/homing_launcher_decals"
+	"$bumpmap" "glide/weapons/homing_launcher_decals_n"
+	"$translucent" "1"
+	"$halflambert" "1"
+}

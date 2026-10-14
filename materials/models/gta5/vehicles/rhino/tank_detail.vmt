@@ -1,0 +1,6 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/gta5/vehicles/rhino/tank_detail"
+	"$bumpmap" "models/gta5/vehicles/rhino/tank_detail_n"
+	"$allowdiffusemodulation" "false"
+}

@@ -1,0 +1,5 @@
+"UnlitGeneric"
+{
+    "$basetexture" "glide/vgui/glide_repair_wrench_icon"
+    "$translucent" "1"
+}

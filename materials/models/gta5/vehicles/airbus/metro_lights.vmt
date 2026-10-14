@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/gta5/vehicles/airbus/metro_lights"
+	"$allowdiffusemodulation" "false"
+}

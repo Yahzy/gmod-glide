@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/gta5/vehicles/rhino/tank_camo"
+	"$allowdiffusemodulation" "false"
+}

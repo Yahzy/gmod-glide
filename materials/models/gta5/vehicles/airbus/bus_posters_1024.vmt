@@ -1,0 +1,5 @@
+"VertexLitGeneric"
+{
+	"$basetexture" "models/gta5/vehicles/airbus/bus_posters_1024"
+	"$allowdiffusemodulation" "false"
+}

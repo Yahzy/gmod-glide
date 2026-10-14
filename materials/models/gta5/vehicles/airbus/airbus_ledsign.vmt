@@ -1,0 +1,7 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/gta5/vehicles/airbus/airbus_ledsign"
+	"$nodecal" "1"
+	"$translucent" "1"
+	"$allowdiffusemodulation" "false"
+}

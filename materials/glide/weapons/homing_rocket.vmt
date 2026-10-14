@@ -1,0 +1,6 @@
+"VertexlitGeneric"
+{
+	"$baseTexture" "glide/weapons/homing_rocket"
+	"$nodecal" "1"
+	"$halflambert" "1"
+}

@@ -1,0 +1,11 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "models/gta5/vehicles/apc_missile"
+	"$allowdiffusemodulation" "false"
+
+	"$phong" "1"
+	"$bumpmap" "models/gta5/vehicles/body_normal"
+	"$phongexponenttexture"	"models/gta5/vehicles/apc_missile_s"
+	"$phongboost" "1.0"
+	"$phongfresnelranges" "[0 0.5 1]"
+}

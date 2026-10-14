@@ -1,0 +1,5 @@
+"VertexlitGeneric"
+{
+	"$basetexture" "glide/weapons/homing_launcher_sight"
+	"$translucent" "1"
+}

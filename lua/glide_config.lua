@@ -38,11 +38,11 @@ if not CLIENT then return end
 ----- Client settings -----
 
 -- Audio (0 to 1)
-Config.carVolume = 1.0
+Config.carVolume = 0.3
 Config.explosionVolume = 1.0
 Config.hornVolume = 1.0
 Config.windVolume = 0.7
-Config.vcVolume = 0.4                           -- Vehicle volume while someone is talking on voice chat
+Config.vcVolume = 0.1                           -- Vehicle volume while someone is talking on voice chat
 
 -- Camera
 Config.lookSensitivity = 1.0

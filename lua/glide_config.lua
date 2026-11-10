@@ -29,6 +29,10 @@ Config.allowGravityGunPunt = false              -- Allow pushing vehicles with t
 Config.alwaysCanEnterLockedVehicles = false     -- Allow entering locked vehicles that players don't own
 Config.allowPlayerWeaponsInVehicle = false      -- Allow players to use their own weapons inside vehicles
 
+-- Fuel consumption, in liters per second (tank size is `ENT.MaxFuel`, 60 by default)
+Config.fuelIdleConsumption = 0.005              -- While the engine is running
+Config.fuelThrottleConsumption = 0.06           -- Added on top, at full throttle
+
 -- Gibs
 Config.gibLifetime = 8                          -- In seconds, 0 for no despawning
 Config.gibEnableCollisions = true               -- When false, gibs won't collide with players/props

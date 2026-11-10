@@ -136,6 +136,8 @@ function ENT:Initialize()
     -- Set health back to defaults
     self:Repair()
 
+    self:SetFuel( self.MaxFuel )
+
     -- Let child classes create things like seats, etc.
     self:CreateFeatures()
 
@@ -193,6 +195,7 @@ end
 
 function ENT:TurnOn()
     if not self.isEngineEnabled then return end
+    if self:GetFuel() <= 0 then return end
 
     local state = self:GetEngineState()
 
@@ -202,6 +205,32 @@ function ENT:TurnOn()
     elseif state ~= 2 then
         self:SetEngineState( 1 )
     end
+end
+
+--- Adds fuel to the tank, clamped to `ENT.MaxFuel`.
+--- Returns how many liters were actually added.
+function ENT:AddFuel( amount )
+    local fuel = self:GetFuel()
+    local newFuel = math.Clamp( fuel + amount, 0, self.MaxFuel )
+
+    self:SetFuel( newFuel )
+
+    return newFuel - fuel
+end
+
+function ENT:FuelThink( dt, selfTbl )
+    if selfTbl.GetEngineState( self ) ~= 2 then return end
+
+    local config = Glide.Config
+    local throttle = selfTbl.GetEngineThrottle and selfTbl.GetEngineThrottle( self ) or 0
+    local fuel = selfTbl.GetFuel( self ) - ( config.fuelIdleConsumption + throttle * config.fuelThrottleConsumption ) * dt
+
+    if fuel <= 0 then
+        fuel = 0
+        selfTbl.TurnOff( self )
+    end
+
+    selfTbl.SetFuel( self, fuel )
 end
 
 function ENT:TurnOff()
@@ -559,6 +588,8 @@ function ENT:Think()
 
     -- Update water logic
     selfTbl.WaterThink( self, selfTbl, dt )
+
+    selfTbl.FuelThink( self, dt, selfTbl )
 
     -- Deal engine fire damage over time
     if selfTbl.GetIsEngineOnFire( self ) then

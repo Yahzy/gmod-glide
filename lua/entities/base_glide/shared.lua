@@ -19,6 +19,9 @@ ENT.VehicleType = Glide.VEHICLE_TYPE.UNDEFINED
 -- Max. chassis health
 ENT.MaxChassisHealth = 1000
 
+-- Fuel tank capacity, in liters
+ENT.MaxFuel = 60
+
 -- Does this vehicle have headlights?
 ENT.CanSwitchHeadlights = false
 
@@ -48,6 +51,7 @@ function ENT:SetupDataTables()
 
     self:NetworkVar( "Float", "ChassisHealth" )
     self:NetworkVar( "Float", "EngineHealth" )
+    self:NetworkVar( "Float", "Fuel" )
 
     self:NetworkVar( "Float", "BrakeValue" )
     self:NetworkVar( "Int", "HeadlightState" )
